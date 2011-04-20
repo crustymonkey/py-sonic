@@ -15,3 +15,5 @@ You should have received a copy of the GNU General Public License
 along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
+class VersionError(Exception):
+    pass

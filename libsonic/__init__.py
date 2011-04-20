@@ -15,14 +15,4 @@ You should have received a copy of the GNU General Public License
 along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
-import json
-
-class Connection(object):
-    def __init__(self , baseUrl , username , password , apiVersion='1.5.0' ,
-            appName='py-sonic'):
-        self.baseUrl = baseUrl
-        self.username = username
-        self.rawPass = password
-        self.apiVersion = apiVersion
-        self.appName = appName
-        
+from connection import *

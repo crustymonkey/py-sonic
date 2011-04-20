@@ -17,11 +17,28 @@ along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 
 from base64 import b64encode
 from urllib import urlencode
+from errors import VersionError
 import json , urllib2
 
 class Connection(object):
     def __init__(self , baseUrl , username , password , port=4040 , 
             apiVersion='1.5.0' , appName='py-sonic'):
+        """
+        This will create a connection to your subsonic server
+
+        baseUrl:str         The base url for your server. Be sure to use 
+                            "https" for SSL connections
+                            ex: http://subsonic.example.com
+        username:str        The username to use for the connection
+        password:str        The password to use for the connection
+        port:int            The port number to connect on.  The default for
+                            unencrypted subsonic connections is 4040
+        apiVersion:str      This is the apiVersion to use.  Different versions
+                            of subsonic use different apiVersions.  See
+                            the "Versions" section at 
+                            http://www.subsonic.org/pages/api.jsp
+        appName:str         The name of your application.
+        """
         self._baseUrl = baseUrl
         self._username = username
         self._rawPass = password
@@ -36,7 +53,9 @@ class Connection(object):
         self._opener = self._getOpener(self._username , self._rawPass)
     baseUrl = property(lambda s: s._baseUrl , setBaseUrl)
 
-    port = property(lambda s: s._port , lambda s , p: s._port = int(p))
+    def setPort(self , port):
+        self._port = int(port)
+    port = property(lambda s: s._port , setPort)
 
     def setUsername(self , username):
         self._username = username
@@ -49,22 +68,35 @@ class Connection(object):
         self._opener = self._getOpener(self._username , self._rawPass)
     password = property(lambda s: s._rawPass , setPassword)
 
-    apiVersion = property(lambda s: s._apiVersion , 
-            lambda s , v: s._apiVersion = v)
+    def setApiVersion(self , version):
+        self._apiVersion = version
+    apiVersion = property(lambda s: s._apiVersion , setApiVersion)
 
-    appName = property(lambda s: s._appName , lambda s , n: s._appName = n)
+    def setAppName(self , appName):
+        self._appName = appName
+    appName = property(lambda s: s._appName , setAppName)
 
     # API methods
     def ping(self):
         """
         Returns a boolean True if the server is alive
         """
-        req = self._getRequest('ping.view')
+        since = '1.0.0'
+        methodName = 'ping'
+        viewName = '%s.view' % methodName
+        self._checkVersion(methodName , since)
+
+        req = self._getRequest(viewName)
         try:
-            res = self._opener.open(req)
+            res = self._doInfoReq(req)
         except:
             return False
-        return res
+        if res['status'] == 'ok':
+            return True
+        return False
+
+    def getLicense(self):
+        since = '1.0.0'
 
     # Private internal methods
     def _getOpener(self , username , passwd):
@@ -84,3 +116,28 @@ class Connection(object):
         if data:
             req.add_data(data)
         return req
+
+    def _checkVersion(self , methodName , version):
+        """
+        Raise an exception if the api call is not implemented at this 
+        apiVersion
+        """
+        if self._apiVersion < version:
+            raise VersionError('The apiVersion, %s, does not support the '
+                '"%s" call (need %s)' % (self._apiVersion , methodName ,
+                version)
+
+    def _doInfoReq(self , req):
+        # Returns a parsed dictionary version of the result
+        res = self._opener.open(req)
+        dres = json.loads(res.read())
+        return dres['subsonic-response']
+
+    def _doBinReq(self , req):
+        res = self._opener.open(req)
+        contType = res.info().getheader('Content-Type')
+        if contType.startswith('text/html') or \
+                contType.startswith('application/json'):
+            dres = json.loads(res.read())
+            return dres['subsonic-response']
+        return res
