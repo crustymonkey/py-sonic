@@ -15,5 +15,45 @@ You should have received a copy of the GNU General Public License
 along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
-class VersionError(Exception):
+class SonicError(Exception):
     pass
+
+class ParameterError(SonicError):
+    pass
+
+class VersionError(SonicError):
+    pass
+
+class CredentialError(SonicError):
+    pass
+
+class AuthError(SonicError):
+    pass
+
+class LicenseError(SonicError):
+    pass
+
+class DataNotFoundError(SonicError):
+    pass
+
+class ArgumentError(SonicError):
+    pass
+
+# This maps the error code numbers from the Subsonic server to their
+# appropriate Exceptions
+ERR_CODE_MAP = {
+    0: SonicError ,
+    10: ParameterError ,
+    20: VersionError ,
+    30: VersionError ,
+    40: CredentialError ,
+    50: AuthError ,
+    60: LicenseError ,
+    70: DataNotFoundError ,
+}
+
+def getExcByCode(code):
+    code = int(code)
+    if code in ERR_CODE_MAP:
+        return ERR_CODE_MAP[code]
+    return SonicError

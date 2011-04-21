@@ -16,3 +16,5 @@ along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
 from connection import *
+
+__version__ = '0.1.0'

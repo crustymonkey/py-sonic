@@ -17,12 +17,15 @@ along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 
 from base64 import b64encode
 from urllib import urlencode
-from errors import VersionError
+from errors import *
+from pprint import pprint
 import json , urllib2
+
+API_VERSION = '1.5.0'
 
 class Connection(object):
     def __init__(self , baseUrl , username , password , port=4040 , 
-            apiVersion='1.5.0' , appName='py-sonic'):
+            appName='py-sonic'):
         """
         This will create a connection to your subsonic server
 
@@ -33,17 +36,13 @@ class Connection(object):
         password:str        The password to use for the connection
         port:int            The port number to connect on.  The default for
                             unencrypted subsonic connections is 4040
-        apiVersion:str      This is the apiVersion to use.  Different versions
-                            of subsonic use different apiVersions.  See
-                            the "Versions" section at 
-                            http://www.subsonic.org/pages/api.jsp
         appName:str         The name of your application.
         """
         self._baseUrl = baseUrl
         self._username = username
         self._rawPass = password
         self._port = int(port)
-        self._apiVersion = apiVersion
+        self._apiVersion = API_VERSION
         self._appName = appName
         self._opener = self._getOpener(self._username , self._rawPass)
 
@@ -68,9 +67,7 @@ class Connection(object):
         self._opener = self._getOpener(self._username , self._rawPass)
     password = property(lambda s: s._rawPass , setPassword)
 
-    def setApiVersion(self , version):
-        self._apiVersion = version
-    apiVersion = property(lambda s: s._apiVersion , setApiVersion)
+    apiVersion = property(lambda s: s._apiVersion)
 
     def setAppName(self , appName):
         self._appName = appName
@@ -79,12 +76,12 @@ class Connection(object):
     # API methods
     def ping(self):
         """
-        Returns a boolean True if the server is alive
+        since: 1.0.0
+        
+        Returns a boolean True if the server is alive, False otherwise
         """
-        since = '1.0.0'
         methodName = 'ping'
         viewName = '%s.view' % methodName
-        self._checkVersion(methodName , since)
 
         req = self._getRequest(viewName)
         try:
@@ -93,10 +90,858 @@ class Connection(object):
             return False
         if res['status'] == 'ok':
             return True
+        elif res['status'] == 'failed':
+            raise getExcByCode(res['error']['code'])
         return False
 
     def getLicense(self):
-        since = '1.0.0'
+        """
+        since: 1.0.0
+
+        Gets details related to the software license
+
+        Returns a dict like the following:
+
+        {u'license': {u'date': u'2010-05-21T11:14:39',
+                      u'email': u'email@example.com',
+                      u'key': u'12345678901234567890123456789012',
+                      u'valid': True},
+         u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getLicense'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getMusicFolders(self):
+        """
+        since: 1.0.0
+
+        Returns all configured music folders
+
+        Returns a dict like the following:
+
+        {u'musicFolders': {u'musicFolder': [{u'id': 0, u'name': u'folder1'},
+                                    {u'id': 1, u'name': u'folder2'},
+                                    {u'id': 2, u'name': u'folder3'}]},
+         u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getMusicFolders'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getNowPlaying(self):
+        """
+        since: 1.0.0
+
+        Returns what is currently being played by all users
+
+        Returns a dict like the following:
+
+        {u'nowPlaying': {u'entry': {u'album': u"Jazz 'Round Midnight 12",
+                            u'artist': u'Astrud Gilberto',
+                            u'bitRate': 172,
+                            u'contentType': u'audio/mpeg',
+                            u'coverArt': u'98349284',
+                            u'duration': 325,
+                            u'genre': u'Jazz',
+                            u'id': u'2424324',
+                            u'isDir': False,
+                            u'isVideo': False,
+                            u'minutesAgo': 0,
+                            u'parent': u'542352',
+                            u'path': u"Astrud Gilberto/Jazz 'Round Midnight 12/01 - The Girl From Ipanema.mp3",
+                            u'playerId': 1,
+                            u'size': 7004089,
+                            u'suffix': u'mp3',
+                            u'title': u'The Girl From Ipanema',
+                            u'track': 1,
+                            u'username': u'user1',
+                            u'year': 1996}},
+         u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getNowPlaying'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getIndexes(self , musicFolderId=None , ifModifiedSince=None):
+        """
+        since: 1.0.0
+
+        Returns an indexed structure of all artists
+
+        musicFolderId:int       If this is specified, it will only return 
+                                artists for the given folder ID from 
+                                the getMusicFolders call
+        ifModifiedSince:int     If specified, return a result if the artist
+                                collection has changed since the given time
+
+        Returns a dict like the following:
+
+        {u'indexes': {u'index': [{u'artist': [{u'id': u'29834728934',
+                                       u'name': u'A Perfect Circle'},
+                                      {u'id': u'238472893',
+                                       u'name': u'A Small Good Thing'},
+                                      {u'id': u'9327842983',
+                                       u'name': u'A Tribe Called Quest'},
+                                      {u'id': u'29348729874',
+                                       u'name': u'A-Teens, The'},
+                                      {u'id': u'298472938',
+                                       u'name': u'ABA STRUCTURE'}] ,
+                      u'lastModified': 1303318347000L},
+         u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getIndexes'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'musicFolderId': musicFolderId , 
+            'ifModifiedSince': self.ts2milli(ifModifiedSince)})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getMusicDirectory(self , mid):
+        """
+        since: 1.0.0
+
+        Returns a listing of all files in a music directory.  Typically used
+        to get a list of albums for an artist or list of songs for an album.
+
+        mid:str     The string ID value which uniquely identifies the 
+                    folder.  Obtained via calls to getIndexes or 
+                    getMusicDirectory.  REQUIRED
+
+        Returns a dict like the following:
+
+        {u'directory': {u'child': [{u'artist': u'A Tribe Called Quest',
+                            u'coverArt': u'223484',
+                            u'id': u'329084',
+                            u'isDir': True,
+                            u'parent': u'234823940',
+                            u'title': u'Beats, Rhymes And Life'},
+                           {u'artist': u'A Tribe Called Quest',
+                            u'coverArt': u'234823794',
+                            u'id': u'238472893',
+                            u'isDir': True,
+                            u'parent': u'2308472938',
+                            u'title': u'Midnight Marauders'},
+                           {u'artist': u'A Tribe Called Quest',
+                            u'coverArt': u'39284792374',
+                            u'id': u'983274892',
+                            u'isDir': True,
+                            u'parent': u'9823749',
+                            u'title': u"People's Instinctive Travels And The Paths Of Rhythm"},
+                           {u'artist': u'A Tribe Called Quest',
+                            u'coverArt': u'289347293',
+                            u'id': u'3894723934',
+                            u'isDir': True,
+                            u'parent': u'9832942',
+                            u'title': u'The Anthology'},
+                           {u'artist': u'A Tribe Called Quest',
+                            u'coverArt': u'923847923',
+                            u'id': u'29834729',
+                            u'isDir': True,
+                            u'parent': u'2934872893',
+                            u'title': u'The Love Movement'},
+                           {u'artist': u'A Tribe Called Quest',
+                            u'coverArt': u'9238742893',
+                            u'id': u'238947293',
+                            u'isDir': True,
+                            u'parent': u'9432878492',
+                            u'title': u'The Low End Theory'}],
+                u'id': u'329847293',
+                u'name': u'A Tribe Called Quest'},
+         u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getMusicDirectory'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName , {'id': mid})
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def search(self , artist=None , album=None , title=None , any=None , 
+            count=20 , offset=0 , newerThan=None):
+        """
+        since: 1.0.0
+
+        DEPRECATED SINCE API 1.4.0!  USE search2() INSTEAD!
+
+        Returns a listing of files matching the given search criteria.
+        Supports paging with offset
+
+        artist:str      Search for artist
+        album:str       Search for album
+        title:str       Search for title of song
+        any:str         Search all fields
+        count:int       Max number of results to return [default: 20]
+        offset:int      Search result offset.  For paging [default: 0]
+        newerThan:int   Return matches newer than this timestamp
+        """
+        if artist == album == title == any == None:
+            raise ArgumentError('Invalid search.  You must supply search '
+                'criteria')
+        methodName = 'search'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'artist': artist , 'album': album , 
+            'title': title , 'any': any , 'count': count , 'offset': offset ,
+            'newerThan': self._ts2milli(newerThan)})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def search2(self , query , artistCount=20 , artistOffset=0 , albumCount=20 ,
+            albumOffset=0 , songCount=20 , songOffset=0):
+        """
+        since: 1.4.0
+
+        Returns albums, artists and songs matching the given search criteria.
+        Supports paging through the result.
+
+        query:str           The search query
+        artistCount:int     Max number of artists to return [default: 20]
+        artistOffset:int    Search offset for artists (for paging) [default: 0]
+        albumCount:int      Max number of albums to return [default: 20]
+        albumOffset:int     Search offset for albums (for paging) [default: 0]
+        songCount:int       Max number of songs to return [default: 20]
+        songOffset:int      Search offset for songs (for paging) [default: 0]
+
+        Returns a dict like the following:
+
+        {u'searchResult2': {u'album': [{u'artist': u'A Tribe Called Quest',
+                                u'coverArt': u'289347',
+                                u'id': u'32487298',
+                                u'isDir': True,
+                                u'parent': u'98374289',
+                                u'title': u'The Love Movement'}],
+                    u'artist': [{u'id': u'2947839',
+                                 u'name': u'A Tribe Called Quest'},
+                                {u'id': u'239847239',
+                                 u'name': u'Tribe'}],
+                    u'song': [{u'album': u'Beats, Rhymes And Life',
+                               u'artist': u'A Tribe Called Quest',
+                               u'bitRate': 224,
+                               u'contentType': u'audio/mpeg',
+                               u'coverArt': u'329847',
+                               u'duration': 148,
+                               u'genre': u'default',
+                               u'id': u'3928472893',
+                               u'isDir': False,
+                               u'isVideo': False,
+                               u'parent': u'23984728394',
+                               u'path': u'A Tribe Called Quest/Beats, Rhymes And Life/A Tribe Called Quest - Beats, Rhymes And Life - 03 - Motivators.mp3',
+                               u'size': 4171913,
+                               u'suffix': u'mp3',
+                               u'title': u'Motivators',
+                               u'track': 3}]},
+         u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'search2'
+        viewName = '%s.view' % methodName
+
+        q = {'query': query , 'artistCount': artistCount , 
+            'artistOffset': artistOffset , 'albumCount': albumCount ,
+            'albumOffset': albumOffset , 'songCount': songCount ,
+            'songOffset': songOffset}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getPlaylists(self):
+        """
+        since: 1.0.0
+
+        Returns the ID and name of all saved playlists
+
+        Returns a dict like the following:
+
+        {u'playlists': {u'playlist': [{u'id': u'62656174732e6d3375',
+                               u'name': u'beats'},
+                              {u'id': u'766172696574792e6d3375',
+                               u'name': u'variety'}]},
+         u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getPlaylists'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getPlaylist(self , pid):
+        """
+        since: 1.0.0
+
+        Returns a listing of files in a saved playlist
+
+        id:str      The ID of the playlist as returned in getPlaylists()
+
+        Returns a dict like the following:
+
+        {u'playlist': {u'entry': {u'album': u'The Essential Bob Dylan',
+                          u'artist': u'Bob Dylan',
+                          u'bitRate': 32,
+                          u'contentType': u'audio/mpeg',
+                          u'coverArt': u'2983478293',
+                          u'duration': 984,
+                          u'genre': u'Classic Rock',
+                          u'id': u'982739428',
+                          u'isDir': False,
+                          u'isVideo': False,
+                          u'parent': u'98327428974',
+                          u'path': u"Bob Dylan/Essential Bob Dylan Disc 1/Bob Dylan - The Essential Bob Dylan - 03 - The Times They Are A-Changin'.mp3",
+                          u'size': 3921899,
+                          u'suffix': u'mp3',
+                          u'title': u"The Times They Are A-Changin'",
+                          u'track': 3},
+               u'id': u'44796c616e2e6d3375',
+               u'name': u'Dylan'},
+         u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getPlaylist'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName , {'id': pid})
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def createPlaylist(self , playlistId=None , name=None , songIds=[]):
+        """
+        since: 1.2.0
+
+        Creates OR updates a playlist.  If updating the list, the 
+        playlistId is required.  If creating a list, the name is required.
+        
+        playlistId:str      The ID of the playlist to UPDATE
+        name:str            The name of the playlist to CREATE
+        songIds:list        The list of songIds to populate the list with in
+                            either create or update mode.  Note that this
+                            list will replace the existing list if updating
+
+        Returns a dict like the following:
+
+        {u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'createPlaylist'
+        viewName = '%s.view' % methodName
+
+        if playlistId == name == None:
+            raise ArgumentError('You must supply either a playlistId or a name')
+        if playlistId is not None and name is not None:
+            raise ArgumentError('You can only supply either a playlistId '
+                 'OR a name, not both')
+
+        q = self._getQueryDict({'playlistId': playlistId , 'name': name})
+
+        req = self._getRequestWithList(viewName , 'songId' , songIds , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def deletePlaylist(self , pid):
+        """
+        since: 1.2.0
+
+        Deletes a saved playlist
+
+        pid:str     ID of the playlist to delete, as obtained by getPlaylists
+
+        Returns a dict like the following:
+
+        """
+        methodName = 'deletePlaylist'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName , {'id': pid})
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def download(self , sid):
+        """
+        since: 1.0.0
+
+        Downloads a given music file.
+
+        sid:str     The ID of the music file to download.
+
+        Returns the file-like object for reading or raises an exception 
+        on error
+        """
+        methodName = 'download'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName , {'id': sid})
+        res = self._doBinReq(req)
+        if isinstance(res , dict):
+            self._checkStatus(res)
+        return res
+
+    def stream(self , sid , maxBitRate=0):
+        """
+        since: 1.0.0
+
+        Downloads a given music file.
+
+        sid:str         The ID of the music file to download.
+        maxBitRate:int  (since: 1.2.0) If specified, the server will 
+                        attempt to limit the bitrate to this value, in 
+                        kilobits per second. If set to zero (default), no limit 
+                        is imposed. Legal values are: 0, 32, 40, 48, 56, 64, 
+                        80, 96, 112, 128, 160, 192, 224, 256 and 320.
+
+        Returns the file-like object for reading or raises an exception 
+        on error
+        """
+        methodName = 'stream'
+        viewName = '%s.view' % methodName
+        
+        q = {'id': sid , 'maxBitRate': maxBitRate}
+
+        req = self._getRequest(viewName , q)
+        res = self._doBinReq(req)
+        if isinstance(res , dict):
+            self._checkStatus(res)
+        return res
+
+    def getCoverArt(self , aid , size=None):
+        """
+        since: 1.0.0
+
+        Returns a cover art image
+
+        aid:str     ID string for the cover art image to download
+        size:int    If specified, scale image to this size
+
+        Returns the file-like object for reading or raises an exception 
+        on error
+        """
+        methodName = 'getCoverArt'
+        viewName = '%s.view' % methodName
+        
+        q = self._getQueryDict({'id': aid , 'size': size})
+
+        req = self._getRequest(viewName , q)
+        res = self._doBinReq(req)
+        if isinstance(res , dict):
+            self._checkStatus(res)
+        return res
+
+    def scrobble(self , sid , submission=True):
+        """
+        since: 1.5.0
+
+        "Scrobbles" a given music file on last.fm.  Requires that the user
+        has set this up.
+
+        sid:str             The ID of the file to scrobble
+        submission:bool     Whether this is a "submission" or a "now playing"
+                            notification
+
+        Returns a dict like the following:
+
+        {u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'scrobble'
+        viewName = '%s.view' % methodName
+
+        q = {'id': sid , 'submission': submission}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def changePassword(self , username , password):
+        """
+        since: 1.1.0
+
+        Changes the password of an existing Subsonic user.  Note that the
+        user performing this must have admin privileges
+
+        username:str        The username whose password is being changed
+        password:str        The new password of the user
+
+        Returns a dict like the following:
+
+        {u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'changePassword'
+        viewName = '%s.view' % methodName
+        hexPass = 'enc:%s' % self._hexEnc(password)
+
+        q = {'username': username , 'password': hexPass}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getUser(self , username):
+        """
+        since: 1.3.0
+
+        Get details about a given user, including which auth roles it has.
+        Can be used to enable/disable certain features in the client, such
+        as jukebox control
+
+        username:str        The username to retrieve.  You can only retrieve 
+                            your own user unless you have admin privs.
+
+        Returns a dict like the following:
+
+        {u'status': u'ok', 
+         u'user': {u'adminRole': False,
+               u'commentRole': False,
+               u'coverArtRole': False,
+               u'downloadRole': True,
+               u'jukeboxRole': False,
+               u'playlistRole': True,
+               u'podcastRole': False,
+               u'settingsRole': True,
+               u'streamRole': True,
+               u'uploadRole': True,
+               u'username': u'test'},
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getUser'
+        viewName = '%s.view' % methodName
+
+        q = {'username': username}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def createUser(self , username , password , ldapAuthenticated=False ,
+            adminRole=False , settingsRole=True , streamRole=True ,
+            jukeboxRole=False , downloadRole=False , uploadRole=False ,
+            playlistRole=False , coverArtRole=False , commentRole=False ,
+            podcastRole=False):
+        """
+        since: 1.1.0
+
+        Creates a new subsonic user, using the parameters defined.  See the
+        documentation at http://subsonic.org for more info on all the roles.
+
+        username:str        The username of the new user
+        password:str        The password for the new user
+        <For info on the boolean roles, see http://subsonic.org for more info>
+
+        Returns a dict like the following:
+
+        {u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'createUser'
+        viewName = '%s.view' % methodName
+        hexPass = 'enc:%s' % self._hexEnc(password)
+
+        q = {'username': username , 'password': hexPass ,
+            'ldapAuthenticated': ldapAuthenticated , 'adminRole': adminRole ,
+            'settingsRole': settingsRole , 'streamRole': streamRole ,
+            'jukeboxRole': jukeboxRole , 'downloadRole': downloadRole ,
+            'uploadRole': uploadRole , 'playlistRole': playlistRole ,
+            'coverArtRole': coverArtRole , 'commentRole': commentRole ,
+            'podcastRole': podcastRole}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def deleteUser(self , username):
+        """
+        since: 1.3.0
+
+        Deletes an existing Subsonic user.  Of course, you must have admin
+        rights for this.
+
+        username:str        The username of the user to delete
+
+        Returns a dict like the following:
+
+        {u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'deleteUser'
+        viewName = '%s.view' % methodName
+
+        q = {'username': username}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+    
+    def getChatMessages(self , since=1):
+        """
+        since: 1.2.0
+
+        Returns the current visible (non-expired) chat messages.
+
+        since:int       Only return messages newer than this timestamp
+
+        NOTE: All times returned are in MILLISECONDS since the Epoch, not
+              seconds!
+
+        Returns a dict like the following:
+        {u'chatMessages': {u'chatMessage': {u'message': u'testing 123',
+                                            u'time': 1303411919872L,
+                                            u'username': u'admin'}},
+         u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getChatMessages'
+        viewName = '%s.view' % methodName
+
+        q = {'since': self._ts2milli(since)}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def addChatMessage(self , message):
+        """
+        since: 1.2.0
+
+        Adds a message to the chat log
+
+        message:str     The message to add
+
+        Returns a dict like the following:
+
+        {u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'addChatMessage'
+        viewName = '%s.view' % methodName
+
+        q = {'message': message}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getAlbumList(self , ltype , size=10 , offset=0):
+        """
+        since: 1.2.0
+
+        Returns a list of random, newest, highest rated etc. albums. 
+        Similar to the album lists on the home page of the Subsonic 
+        web interface
+
+        ltype:str       The list type. Must be one of the following: random, 
+                        newest, highest, frequent, recent
+        size:int        The number of albums to return. Max 500
+        offset:int      The list offset. Use for paging. Max 5000
+
+        Returns a dict like the following:
+
+        {u'albumList': {u'album': [{u'artist': u'Hank Williams',
+                            u'id': u'3264928374',
+                            u'isDir': True,
+                            u'parent': u'9238479283',
+                            u'title': u'The Original Singles Collection...Plus'},
+                           {u'artist': u'Freundeskreis',
+                            u'coverArt': u'9823749823',
+                            u'id': u'23492834',
+                            u'isDir': True,
+                            u'parent': u'9827492374',
+                            u'title': u'Quadratur des Kreises'}]},
+         u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getAlbumList'
+        viewName = '%s.view' % methodName
+
+        q = {'type': ltype , 'size': size , 'offset': offset}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getRandomSongs(self , size=10 , genre=None , fromYear=None , 
+            toYear=None , musicFolderId=None):
+        """
+        since 1.2.0
+
+        Returns random songs matching the given criteria
+
+        size:int            The max number of songs to return. Max 500
+        genre:str           Only return songs from this genre
+        fromYear:int        Only return songs after or in this year
+        toYear:int          Only return songs before or in this year
+        musicFolderId:str   Only return songs in the music folder with the
+                            given ID.  See getMusicFolders
+
+        Returns a dict like the following:
+
+        {u'randomSongs': {u'song': [{u'album': u'1998 EP - Airbag (How Am I Driving)',
+                             u'artist': u'Radiohead',
+                             u'bitRate': 320,
+                             u'contentType': u'audio/mpeg',
+                             u'duration': 129,
+                             u'id': u'9284728934',
+                             u'isDir': False,
+                             u'isVideo': False,
+                             u'parent': u'983249823',
+                             u'path': u'Radiohead/1998 EP - Airbag (How Am I Driving)/06 - Melatonin.mp3',
+                             u'size': 5177469,
+                             u'suffix': u'mp3',
+                             u'title': u'Melatonin'},
+                            {u'album': u'Mezmerize',
+                             u'artist': u'System Of A Down',
+                             u'bitRate': 214,
+                             u'contentType': u'audio/mpeg',
+                             u'coverArt': u'23849372894',
+                             u'duration': 176,
+                             u'id': u'28937492834',
+                             u'isDir': False,
+                             u'isVideo': False,
+                             u'parent': u'92837492837',
+                             u'path': u'System Of A Down/Mesmerize/10 - System Of A Down - Old School Hollywood.mp3',
+                             u'size': 4751360,
+                             u'suffix': u'mp3',
+                             u'title': u'Old School Hollywood',
+                             u'track': 10}]},
+         u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getRandomSongs'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'size': size , 'genre': genre , 
+            'fromYear': fromYear , 'toYear': toYear , 
+            'musicFolderId': musicFolderId})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getLyrics(self , artist=None , title=None):
+        """
+        since: 1.2.0
+
+        Searches for and returns lyrics for a given song
+
+        artist:str      The artist name
+        title:str       The song title
+
+        Returns a dict like the following for 
+        getLyrics('Bob Dylan' , 'Blowin in the wind'):
+
+        {u'lyrics': {u'artist': u'Bob Dylan',
+             u'content': u"How many roads must a man walk down<snip>",
+             u'title': u"Blowin' in the Wind"},
+         u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getLyrics'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'artist': artist , 'title': title})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def jukeboxControl(self , action , index=None , sids=[] , gain=None):
+        """
+        since: 1.2.0
+
+        Controls the jukebox, i.e., playback directly on the server's 
+        audio hardware. Note: The user must be authorized to control 
+        the jukebox
+
+        action:str      The operation to perform. Must be one of: get, 
+                        start, stop, skip, add, clear, remove, shuffle, 
+                        setGain
+        index:int       Used by skip and remove. Zero-based index of the 
+                        song to skip to or remove.
+        sids:str        Used by add. ID of song to add to the jukebox 
+                        playlist. Use multiple id parameters to add many 
+                        songs in the same request.  Whether you are passing
+                        one song or many into this, this parameter MUST be
+                        a list
+        gain:float      Used by setGain to control the playback volume. 
+                        A float value between 0.0 and 1.0
+        """
+        methodName = 'jukeboxControl'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'action': action , 'index': index , 
+            'gain': gain})
+
+        req = None
+        if action == 'add':
+            # We have to deal with the sids
+            if not (isinstance(sids , list) or isinstance(sids , tuple)):
+                raise ArgumentError('If you are adding songs, "sids" must '
+                    'be a list or tuple!')
+            req = self._getRequestWithList(viewName , 'id' , sids , q)
+        else:
+            req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
 
     # Private internal methods
     def _getOpener(self , username , passwd):
@@ -106,6 +951,15 @@ class Connection(object):
             opener.add_handler(urllib2.HTTPSHandler())
         opener.addheaders = [('Authorization' , 'Basic %s' % creds)]
         return opener
+
+    def _getQueryDict(self , d):
+        """
+        Given a dictionary, it cleans out all the values set to None
+        """
+        for k , v in d.items():
+            if v is None:
+                del d[k]
+        return d
 
     def _getRequest(self , viewName , query={} , data=None):
         qstring = {'f': 'json' , 'v': self._apiVersion , 'c': self._appName}
@@ -117,15 +971,23 @@ class Connection(object):
             req.add_data(data)
         return req
 
-    def _checkVersion(self , methodName , version):
+    def _getRequestWithList(self , viewName , listName , alist , query={} , 
+            data=None):
         """
-        Raise an exception if the api call is not implemented at this 
-        apiVersion
+        Like _getRequest, but allows appending a number of items with the
+        same key (listName).  This bypasses the limitation of urlencode()
         """
-        if self._apiVersion < version:
-            raise VersionError('The apiVersion, %s, does not support the '
-                '"%s" call (need %s)' % (self._apiVersion , methodName ,
-                version)
+        qstring = {'f': 'json' , 'v': self._apiVersion , 'c': self._appName}
+        qstring.update(query)
+        url = '%s:%d/rest/%s?%s' % (self._baseUrl , self._port , viewName ,
+            urlencode(qstring))
+        for i in alist:
+            url += '&' + urlencode({listName: i})
+        req = urllib2.Request(url)
+        if data:
+            req.add_data(data)
+        return req
+
 
     def _doInfoReq(self , req):
         # Returns a parsed dictionary version of the result
@@ -141,3 +1003,29 @@ class Connection(object):
             dres = json.loads(res.read())
             return dres['subsonic-response']
         return res
+
+    def _checkStatus(self , result):
+        if result['status'] == 'ok':
+            return True
+        elif result['status'] == 'failed':
+            exc = getExcByCode(result['error']['code'])
+            raise exc(result['error']['message'])
+
+    def _hexEnc(self , raw):
+        """
+        Returns a "hex encoded" string per the Subsonic api docs
+
+        raw:str     The string to hex encode
+        """
+        ret = ''
+        for c in raw:
+            ret += '%02X' % ord(c)
+        return ret
+
+    def _ts2milli(self , ts):
+        """
+        For whatever reason, Subsonic uses timestamps in milliseconds since
+        the unix epoch.  I have no idea what need there is of this precision,
+        but this will just multiply the timestamp times 1000 and return the int
+        """
+        return int(ts * 1000)
