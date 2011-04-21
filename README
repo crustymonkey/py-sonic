@@ -1,0 +1,20 @@
+-------------
+INSTALL
+-------------
+
+Installation is fairly simple.  Just do the standard install as root:
+
+# tar -xvzf py-sonic-*.tar.gz
+# cd py-sonic-*
+# python setup.py install
+
+-------------
+USAGE
+-------------
+
+This library follows the REST API almost exactly.  If you follow the 
+documentation on http://www.subsonic.org/pages/api.jsp or you do a:
+
+$ pydoc libsonic.connection
+
+
