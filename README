@@ -12,9 +12,48 @@ Installation is fairly simple.  Just do the standard install as root:
 USAGE
 -------------
 
-This library follows the REST API almost exactly.  If you follow the 
+This library follows the REST API almost exactly (for now).  If you follow the 
 documentation on http://www.subsonic.org/pages/api.jsp or you do a:
 
 $ pydoc libsonic.connection
 
+-------------
+BASIC TUTORIAL 
+-------------
 
+This is about as basic as it gets.  We are just going to set up the connection
+and then get a couple of random songs.
+
+-------------
+#!/usr/bin/env python
+
+from pprint import pprint
+import libsonic
+
+# We pass in the base url, the username, password, and port number
+# Be sure to use https:// if this is an ssl connection!
+conn = libsonic.Connection('https://music.example.com' , 'myuser' , 
+    'secretpass' , port=443)
+# Let's get 2 completely random songs
+songs = conn.getRandomSongs(size=2)
+# We'll just pretty print the results we got to the terminal
+pprint(songs)
+-------------
+
+That is about as basic as it gets, but as you can see, it's really
+pretty simple.  If you use the documentation provided in the library:
+
+$ pydoc libsonic.connection
+
+or the api docs on subsonic.org (listed above), you should be able to make use
+of your server without too much trouble.
+
+-------------
+TODO
+-------------
+
+In the future, I would like to make this a little more "pythonic" and add
+some classes to wrap up the data returned from the server.  Right now, the data
+is just returned in the form of a dict, but I would like to have actual
+Song, Album, Folder, etc. classes instead, or at least an alternative.  For
+now, it works.
