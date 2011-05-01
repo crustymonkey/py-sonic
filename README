@@ -40,13 +40,20 @@ songs = conn.getRandomSongs(size=2)
 pprint(songs)
 -------------
 
-That is about as basic as it gets, but as you can see, it's really
-pretty simple.  If you use the documentation provided in the library:
+As you can see, it's really pretty simple.  If you use the documentation 
+provided in the library:
 
 $ pydoc libsonic.connection
 
 or the api docs on subsonic.org (listed above), you should be able to make use
 of your server without too much trouble.
+
+Right now, only plain old dictionary structures are returned.  The plan for 
+0.2 includes the following:
+
+* Proper object representations for Artist, Album, Song, etc.
+* Lazy access of members (the song objects aren't created until you want to
+  do something with them)
 
 -------------
 TODO
