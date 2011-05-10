@@ -19,6 +19,7 @@ from base64 import b64encode
 from urllib import urlencode
 from errors import *
 from pprint import pprint
+from cStringIO import StringIO
 import json , urllib2
 
 API_VERSION = '1.5.0'
@@ -961,33 +962,26 @@ class Connection(object):
                 del d[k]
         return d
 
-    def _getRequest(self , viewName , query={} , data=None):
+    def _getRequest(self , viewName , query={}):
         qstring = {'f': 'json' , 'v': self._apiVersion , 'c': self._appName}
         qstring.update(query)
-        url = '%s:%d/rest/%s?%s' % (self._baseUrl , self._port , viewName ,
-            urlencode(qstring))
-        req = urllib2.Request(url)
-        if data:
-            req.add_data(data)
+        url = '%s:%d/rest/%s' % (self._baseUrl , self._port , viewName)
+        req = urllib2.Request(url , urlencode(qstring))
         return req
 
-    def _getRequestWithList(self , viewName , listName , alist , query={} , 
-            data=None):
+    def _getRequestWithList(self , viewName , listName , alist , query={}):
         """
         Like _getRequest, but allows appending a number of items with the
         same key (listName).  This bypasses the limitation of urlencode()
         """
         qstring = {'f': 'json' , 'v': self._apiVersion , 'c': self._appName}
         qstring.update(query)
-        url = '%s:%d/rest/%s?%s' % (self._baseUrl , self._port , viewName ,
-            urlencode(qstring))
+        url = '%s:%d/rest/%s' % (self._baseUrl , self._port , viewName)
+        data = StringIO(urlencode(qstring))
         for i in alist:
-            url += '&' + urlencode({listName: i})
-        req = urllib2.Request(url)
-        if data:
-            req.add_data(data)
+            data.write('&%s' % urlencode({listName: i}))
+        req = urllib2.Request(url , data.getvalue())
         return req
-
 
     def _doInfoReq(self , req):
         # Returns a parsed dictionary version of the result
