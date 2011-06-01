@@ -614,7 +614,11 @@ class Connection(object):
         viewName = '%s.view' % methodName
         hexPass = 'enc:%s' % self._hexEnc(password)
 
-        q = {'username': username , 'password': hexPass.lower()}
+        # There seems to be an issue with some subsonic implementations
+        # not recognizing the "enc:" precursor to the encoded password and 
+        # encodes the whole "enc:<hex>" as the password.  Weird.
+        #q = {'username': username , 'password': hexPass.lower()}
+        q = {'username': username , 'password': password}
 
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
