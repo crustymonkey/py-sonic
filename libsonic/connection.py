@@ -614,7 +614,7 @@ class Connection(object):
         viewName = '%s.view' % methodName
         hexPass = 'enc:%s' % self._hexEnc(password)
 
-        q = {'username': username , 'password': hexPass}
+        q = {'username': username , 'password': hexPass.lower()}
 
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
