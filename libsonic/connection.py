@@ -26,7 +26,7 @@ API_VERSION = '1.5.0'
 
 class Connection(object):
     def __init__(self , baseUrl , username , password , port=4040 , 
-            appName='py-sonic'):
+            serverPath='/rest' , appName='py-sonic'):
         """
         This will create a connection to your subsonic server
 
@@ -37,6 +37,18 @@ class Connection(object):
         password:str        The password to use for the connection
         port:int            The port number to connect on.  The default for
                             unencrypted subsonic connections is 4040
+        serverPath:str      The base resource path for the subsonic views.
+                            This is useful if you have your subsonic server
+                            behind a proxy and the path that you are proxying
+                            is differnt from the default of '/rest'.
+                            Ex: 
+                                serverPath='/path/to/subs'
+                                
+                              The full url that would be built then would be
+                              (assuming defaults and using "example.com" and
+                              you are using the "ping" view):
+
+                                http://example.com:4040/path/to/subs/ping.view
         appName:str         The name of your application.
         """
         self._baseUrl = baseUrl
@@ -45,6 +57,7 @@ class Connection(object):
         self._port = int(port)
         self._apiVersion = API_VERSION
         self._appName = appName
+        self._serverPath = serverPath.strip('/')
         self._opener = self._getOpener(self._username , self._rawPass)
 
     # Properties
@@ -73,6 +86,10 @@ class Connection(object):
     def setAppName(self , appName):
         self._appName = appName
     appName = property(lambda s: s._appName , setAppName)
+
+    def setServerPath(self , path):
+        self._serverPath = path.strip('/')
+    serverPath = property(lambda s: s._serverPath , setServerPath)
 
     # API methods
     def ping(self):
@@ -969,7 +986,8 @@ class Connection(object):
     def _getRequest(self , viewName , query={}):
         qstring = {'f': 'json' , 'v': self._apiVersion , 'c': self._appName}
         qstring.update(query)
-        url = '%s:%d/rest/%s' % (self._baseUrl , self._port , viewName)
+        url = '%s:%d/%s/%s' % (self._baseUrl , self._port , self._serverPath ,
+            viewName)
         req = urllib2.Request(url , urlencode(qstring))
         return req
 
@@ -980,7 +998,8 @@ class Connection(object):
         """
         qstring = {'f': 'json' , 'v': self._apiVersion , 'c': self._appName}
         qstring.update(query)
-        url = '%s:%d/rest/%s' % (self._baseUrl , self._port , viewName)
+        url = '%s:%d/%s/%s' % (self._baseUrl , self._port , self._serverPath ,
+            viewName)
         data = StringIO(urlencode(qstring))
         for i in alist:
             data.write('&%s' % urlencode({listName: i}))
