@@ -199,7 +199,7 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getIndexes(self , musicFolderId=None , ifModifiedSince=None):
+    def getIndexes(self , musicFolderId=None , ifModifiedSince=0):
         """
         since: 1.0.0
 
@@ -232,7 +232,7 @@ class Connection(object):
         viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'musicFolderId': musicFolderId , 
-            'ifModifiedSince': self.ts2milli(ifModifiedSince)})
+            'ifModifiedSince': self._ts2milli(ifModifiedSince)})
 
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
