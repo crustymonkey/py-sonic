@@ -1015,10 +1015,11 @@ class Connection(object):
     def _doBinReq(self , req):
         res = self._opener.open(req)
         contType = res.info().getheader('Content-Type')
-        if contType.startswith('text/html') or \
-                contType.startswith('application/json'):
-            dres = json.loads(res.read())
-            return dres['subsonic-response']
+        if contType:
+            if contType.startswith('text/html') or \
+                    contType.startswith('application/json'):
+                dres = json.loads(res.read())
+                return dres['subsonic-response']
         return res
 
     def _checkStatus(self , result):
