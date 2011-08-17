@@ -22,7 +22,7 @@ from pprint import pprint
 from cStringIO import StringIO
 import json , urllib2
 
-API_VERSION = '1.5.0'
+API_VERSION = '1.6.0'
 
 class Connection(object):
     def __init__(self , baseUrl , username , password , port=4040 , 
@@ -965,6 +965,133 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
+    def getPodcasts(self):
+        """
+        since: 1.6.0
+
+        Returns all podcast channels the server subscribes to and their 
+        episodes.
+        """
+        methodName = 'getPodcasts'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getShares(self):
+        """
+        since: 1.6.0
+
+        Returns information about shared media this user is allowed to manage
+        """
+        methodName = 'getShares'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def createShare(self , shids=[] , description=None , expires=None):
+        """
+        since: 1.6.0
+
+        Creates a public URL that can be used by anyone to stream music 
+        or video from the Subsonic server. The URL is short and suitable 
+        for posting on Facebook, Twitter etc. Note: The user must be 
+        authorized to share (see Settings > Users > User is allowed to 
+        share files with anyone).
+
+        shids:list[str]              A list of ids of songs, albums or videos 
+                                    to share.
+        description:str             A description that will be displayed to
+                                    people visiting the shared media 
+                                    (optional).
+        expires:float               A timestamp pertaining to the time at
+                                    which this should expire (optional)
+        """
+        methodName = 'createShare'
+        viewName = '%s.view'
+
+        q = self._getQueryDict({'description': description , 
+            expires=self._ts2milli(expires)})
+
+        req = self._getRequestWithList(viewName , 'id' , shids , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def updateShare(self , shid , description=None , expires=None):
+        """
+        since: 1.6.0
+
+        Updates the description and/or expiration date for an existing share
+
+        shid:str            The id of the share to update
+        description:str     The new description for the share (optional).
+        expires:float       The new timestamp for the expiration time of this
+                            share (optional).
+        """
+        methodName = 'updateShare'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': shid , 'description': description ,
+            expires: self._ts2milli(expires)})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def deleteShare(self , shid):
+        """
+        since: 1.6.0
+
+        Deletes an existing share
+
+        shid:str        The id of the share to delete
+        """
+        methodName = 'deleteShare'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': shid})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def setRating(self , id , rating):
+        """
+        since: 1.6.0
+
+        Sets the rating for a music file
+
+        id:str          The id of the item (song/artist/album) to rate
+        rating:int      The rating between 1 and 5 (inclusive), or 0 to remove
+                        the rating
+        """
+        methodName = 'setRating'
+        viewName = '%s.view' % methodName
+
+        try:
+            rating = int(rating)
+        except:
+            raise ArgumentError('Rating must be an integer between 0 and 5: '
+                '%r' % rating)
+        if rating < 0 or rating > 5:
+            raise ArgumentError('Rating must be an integer between 0 and 5: '
+                '%r' % rating)
+
+        q = self._getQueryDict({'id': id , 'rating': rating})
+        
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
     # Private internal methods
     def _getOpener(self , username , passwd):
         creds = b64encode('%s:%s' % (username , passwd))
@@ -1046,4 +1173,6 @@ class Connection(object):
         the unix epoch.  I have no idea what need there is of this precision,
         but this will just multiply the timestamp times 1000 and return the int
         """
+        if ts is None:
+            return None
         return int(ts * 1000)
