@@ -971,6 +971,49 @@ class Connection(object):
 
         Returns all podcast channels the server subscribes to and their 
         episodes.
+
+        Returns a dict like the following:
+        {u'status': u'ok',
+         u'version': u'1.6.0',
+         u'xmlns': u'http://subsonic.org/restapi',
+         u'podcasts': {u'channel': {u'description': u"Dr Chris Smith...",
+                            u'episode': [{u'album': u'Dr Karl and the Naked Scientist',
+                                          u'artist': u'BBC Radio 5 live',
+                                          u'bitRate': 64,
+                                          u'contentType': u'audio/mpeg',
+                                          u'coverArt': u'2f6f70742f737562736f6e69632f706f6463617374732f4472204b61726c20616e6420746865204e616b656420536369656e746973742f64726b61726c5f32303131303831382d30343036612e6d7033',
+                                          u'description': u'Dr Karl answers all your science related questions.',
+                                          u'duration': 2902,
+                                          u'genre': u'Podcast',
+                                          u'id': 0,
+                                          u'isDir': False,
+                                          u'isVideo': False,
+                                          u'parent': u'2f6f70742f737562736f6e69632f706f6463617374732f4472204b61726c20616e6420746865204e616b656420536369656e74697374',
+                                          u'publishDate': u'2011-08-17 22:06:00.0',
+                                          u'size': 23313059,
+                                          u'status': u'completed',
+                                          u'streamId': u'2f6f70742f737562736f6e69632f706f6463617374732f4472204b61726c20616e6420746865204e616b656420536369656e746973742f64726b61726c5f32303131303831382d30343036612e6d7033',
+                                          u'suffix': u'mp3',
+                                          u'title': u'DrKarl: Peppermints, Chillies & Receptors',
+                                          u'year': 2011},
+                                         {u'description': u'which is warmer, a bath with bubbles in it or one without?  Just one of the stranger science stories tackled this week by Dr Chris Smith and the Naked Scientists!',
+                                          u'id': 1,
+                                          u'publishDate': u'2011-08-14 21:05:00.0',
+                                          u'status': u'skipped',
+                                          u'title': u'DrKarl: how many bubbles in your bath? 15 AUG 11'},
+                                          ...
+                                         {u'description': u'Dr Karl joins Rhod to answer all your science questions',
+                                          u'id': 9,
+                                          u'publishDate': u'2011-07-06 22:12:00.0',
+                                          u'status': u'skipped',
+                                          u'title': u'DrKarl: 8 Jul 11 The Strange Sound of the MRI Scanner'}],
+                            u'id': 0,
+                            u'status': u'completed',
+                            u'title': u'Dr Karl and the Naked Scientist',
+                            u'url': u'http://downloads.bbc.co.uk/podcasts/fivelive/drkarl/rss.xml'}}
+        }
+
+        See also: http://subsonic.svn.sourceforge.net/viewvc/subsonic/trunk/subsonic-main/src/main/webapp/xsd/podcasts_example_1.xml?view=markup
         """
         methodName = 'getPodcasts'
         viewName = '%s.view' % methodName
@@ -985,6 +1028,29 @@ class Connection(object):
         since: 1.6.0
 
         Returns information about shared media this user is allowed to manage
+
+        Note that entry can be either a single dict or a list of dicts
+
+        Returns a dict like the following:
+
+        {u'status': u'ok',
+         u'version': u'1.6.0',
+         u'xmlns': u'http://subsonic.org/restapi',
+         u'shares': {u'share': [
+             {u'created': u'2011-08-18T10:01:35',
+              u'entry': {u'artist': u'Alice In Chains',
+                         u'coverArt': u'2f66696c65732f6d7033732f412d4d2f416c69636520496e20436861696e732f416c69636520496e20436861696e732f636f7665722e6a7067',
+                         u'id': u'2f66696c65732f6d7033732f412d4d2f416c69636520496e20436861696e732f416c69636520496e20436861696e73',
+                         u'isDir': True,
+                         u'parent': u'2f66696c65732f6d7033732f412d4d2f416c69636520496e20436861696e73',
+                         u'title': u'Alice In Chains'},
+              u'expires': u'2012-08-18T10:01:35',
+              u'id': 0,
+              u'url': u'http://crustymonkey.subsonic.org/share/BuLbF',
+              u'username': u'admin',
+              u'visitCount': 0
+             }]}
+        }
         """
         methodName = 'getShares'
         viewName = '%s.view' % methodName
@@ -1011,13 +1077,15 @@ class Connection(object):
                                     (optional).
         expires:float               A timestamp pertaining to the time at
                                     which this should expire (optional)
+
+        This returns a structure like you would get back from getShares()
+        containing just your new share.
         """
         methodName = 'createShare'
-        viewName = '%s.view'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'description': description , 
-            expires=self._ts2milli(expires)})
-
+            'expires': self._ts2milli(expires)})
         req = self._getRequestWithList(viewName , 'id' , shids , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -1052,6 +1120,8 @@ class Connection(object):
         Deletes an existing share
 
         shid:str        The id of the share to delete
+
+        Returns a standard response dict
         """
         methodName = 'deleteShare'
         viewName = '%s.view' % methodName
@@ -1072,6 +1142,8 @@ class Connection(object):
         id:str          The id of the item (song/artist/album) to rate
         rating:int      The rating between 1 and 5 (inclusive), or 0 to remove
                         the rating
+
+        Returns a standard response dict
         """
         methodName = 'setRating'
         viewName = '%s.view' % methodName
@@ -1127,9 +1199,11 @@ class Connection(object):
         qstring.update(query)
         url = '%s:%d/%s/%s' % (self._baseUrl , self._port , self._serverPath ,
             viewName)
-        data = StringIO(urlencode(qstring))
+        data = StringIO()
+        data.write(urlencode(qstring))
         for i in alist:
             data.write('&%s' % urlencode({listName: i}))
+        print data.getvalue()
         req = urllib2.Request(url , data.getvalue())
         return req
 
