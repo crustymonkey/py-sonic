@@ -8,6 +8,10 @@ Installation is fairly simple.  Just do the standard install as root:
     cd py-sonic-*
     python setup.py install
 
+You can also install directly using *pip* or *easy_install*
+
+    pip install py-sonic
+
 ## USAGE ##
 
 This library follows the REST API almost exactly (for now).  If you follow the 
