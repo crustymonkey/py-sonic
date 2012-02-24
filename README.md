@@ -62,3 +62,10 @@ some classes to wrap up the data returned from the server.  Right now, the data
 is just returned in the form of a dict, but I would like to have actual
 Song, Album, Folder, etc. classes instead, or at least an alternative.  For
 now, it works.
+
+*NOTE:* I've noticed a wart with the upstream Subsonic API wherein any
+of the Connection methods that would normally return a list of dictionary
+elements (getPlaylists() for example), will only return a dictionary if there
+is a single return element.  I plan on changing this in py-sonic so that
+any methods of that nature will *always* return a list, even if there is
+only a single dict in the list.
