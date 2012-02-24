@@ -19,6 +19,8 @@ documentation on http://www.subsonic.org/pages/api.jsp or you do a:
 
     pydoc libsonic.connection
 
+I have also added documentation at http://stuffivelearned.org/doku.php?id=programming:python:py-sonic
+
 ## BASIC TUTORIAL ##
 
 This is about as basic as it gets.  We are just going to set up the connection
