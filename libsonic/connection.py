@@ -22,11 +22,11 @@ from pprint import pprint
 from cStringIO import StringIO
 import json , urllib2
 
-API_VERSION = '1.6.0'
+API_VERSION = '1.7.0'
 
 class Connection(object):
     def __init__(self , baseUrl , username , password , port=4040 , 
-            serverPath='/rest' , appName='py-sonic'):
+            serverPath='/rest' , appName='py-sonic' , apiVersion=API_VERSION):
         """
         This will create a connection to your subsonic server
 
@@ -50,12 +50,19 @@ class Connection(object):
 
                                 http://example.com:4040/path/to/subs/ping.view
         appName:str         The name of your application.
+        apiVersion:str      The API version you wish to use for your 
+                            application.  Subsonic will throw an error if you
+                            try to use/send an api version higher than what
+                            the server supports.  See the Subsonic API docs
+                            to find the Subsonic version -> API version table.
+                            This is useful if you are connecting to an older
+                            version of Subsonic.
         """
         self._baseUrl = baseUrl
         self._username = username
         self._rawPass = password
         self._port = int(port)
-        self._apiVersion = API_VERSION
+        self._apiVersion = apiVersion
         self._appName = appName
         self._serverPath = serverPath.strip('/')
         self._opener = self._getOpener(self._username , self._rawPass)
@@ -925,9 +932,12 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def jukeboxControl(self , action , index=None , sids=[] , gain=None):
+    def jukeboxControl(self , action , index=None , sids=[] , gain=None , 
+            offset=None):
         """
         since: 1.2.0
+
+        NOTE: Some options were added as of API version 1.7.0
 
         Controls the jukebox, i.e., playback directly on the server's 
         audio hardware. Note: The user must be authorized to control 
@@ -935,22 +945,25 @@ class Connection(object):
 
         action:str      The operation to perform. Must be one of: get, 
                         start, stop, skip, add, clear, remove, shuffle, 
-                        setGain
+                        setGain, status (added in API 1.7.0), 
+                        set (added in API 1.7.0)
         index:int       Used by skip and remove. Zero-based index of the 
                         song to skip to or remove.
-        sids:str        Used by add. ID of song to add to the jukebox 
-                        playlist. Use multiple id parameters to add many 
-                        songs in the same request.  Whether you are passing
-                        one song or many into this, this parameter MUST be
-                        a list
+        sids:str        Used by "add" and "set". ID of song to add to the 
+                        jukebox playlist. Use multiple id parameters to 
+                        add many songs in the same request.  Whether you 
+                        are passing one song or many into this, this 
+                        parameter MUST be a list
         gain:float      Used by setGain to control the playback volume. 
                         A float value between 0.0 and 1.0
+        offset:int      (added in API 1.7.0) Used by "skip".  Start playing
+                        this many seconds into the track.
         """
         methodName = 'jukeboxControl'
         viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'action': action , 'index': index , 
-            'gain': gain})
+            'gain': gain , 'offset': offset})
 
         req = None
         if action == 'add':
