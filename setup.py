@@ -20,7 +20,7 @@ along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 from distutils.core import setup
 
 setup(name='py-sonic' ,
-    version='0.1.7' ,
+    version='0.1.10' ,
     author='Jay Deiman' ,
     author_email='admin@splitstreams.com' ,
     url='http://stuffivelearned.org' ,
