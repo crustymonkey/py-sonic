@@ -24,6 +24,30 @@ import json , urllib2
 
 API_VERSION = '1.7.0'
 
+class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
+    """
+    This class is used to override the default behavior of the 
+    HTTPRedirectHandler, which does *not* redirect POST data
+    """
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        m = req.get_method()
+        if (code in (301, 302, 303, 307) and m in ("GET", "HEAD")
+            or code in (301, 302, 303) and m == "POST"):
+            newurl = newurl.replace(' ', '%20')
+            newheaders = dict((k,v) for k,v in req.headers.items()
+                              if k.lower() not in ("content-length", "content-type")
+                             )
+            data = None
+            if req.has_data():
+                data = req.get_data()
+            return urllib2.Request(newurl,
+                           data=data,
+                           headers=newheaders,
+                           origin_req_host=req.get_origin_req_host(),
+                           unverifiable=True)
+        else:
+            raise urllib2.HTTPError(req.get_full_url(), code, msg, headers, fp)
+
 class Connection(object):
     def __init__(self , baseUrl , username , password , port=4040 , 
             serverPath='/rest' , appName='py-sonic' , apiVersion=API_VERSION):
@@ -1180,9 +1204,8 @@ class Connection(object):
     # Private internal methods
     def _getOpener(self , username , passwd):
         creds = b64encode('%s:%s' % (username , passwd))
-        opener = urllib2.build_opener()
-        opener.add_handler(urllib2.HTTPRedirectHandler())
-        opener.add_handler(urllib2.HTTPSHandler())
+        opener = urllib2.build_opener(PysHTTPRedirectHandler , 
+            urllib2.HTTPSHandler)
         opener.addheaders = [('Authorization' , 'Basic %s' % creds)]
         return opener
 
