@@ -1168,8 +1168,8 @@ class Connection(object):
     def _getOpener(self , username , passwd):
         creds = b64encode('%s:%s' % (username , passwd))
         opener = urllib2.build_opener()
-        if self._baseUrl.startswith('https'):
-            opener.add_handler(urllib2.HTTPSHandler())
+        opener.add_handler(urllib2.HTTPRedirectHandler())
+        opener.add_handler(urllib2.HTTPSHandler())
         opener.addheaders = [('Authorization' , 'Basic %s' % creds)]
         return opener
 
