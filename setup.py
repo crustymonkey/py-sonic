@@ -33,7 +33,6 @@ setup(name='py-sonic' ,
     package_dir={'libsonic': 'libsonic'} ,
     classifiers=[
         'Development Status :: 4 - Beta' ,
-        'Environment :: No Input/Output (Daemon)' ,
         'Intended Audience :: System Administrators' ,
         'Intended Audience :: Information Technology' ,
         'License :: OSI Approved :: GNU General Public License (GPL)' ,
@@ -41,6 +40,9 @@ setup(name='py-sonic' ,
         'Operating System :: POSIX' ,
         'Programming Language :: Python' ,
         'Topic :: System :: Systems Administration' ,
+        'Topic :: Internet :: WWW/HTTP' ,
+        'Topic :: Software Development :: Libraries :: Python Modules' ,
+        'Topic :: Software Development :: Libraries' ,
         'Topic :: System' ,
     ]
 )
