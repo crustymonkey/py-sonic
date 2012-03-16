@@ -16,15 +16,15 @@ along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
 from base64 import b64encode
-from urllib import urlencode
-from errors import *
+from urllib.parse import urlencode
+from .errors import *
 from pprint import pprint
-from cStringIO import StringIO
-import json , urllib2
+from io import StringIO
+import json , urllib.request, urllib.error, urllib.parse
 
 API_VERSION = '1.7.0'
 
-class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
+class PysHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
     """
     This class is used to override the default behavior of the 
     HTTPRedirectHandler, which does *not* redirect POST data
@@ -34,19 +34,19 @@ class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
         if (code in (301, 302, 303, 307) and m in ("GET", "HEAD")
             or code in (301, 302, 303) and m == "POST"):
             newurl = newurl.replace(' ', '%20')
-            newheaders = dict((k,v) for k,v in req.headers.items()
+            newheaders = dict((k,v) for k,v in list(req.headers.items())
                               if k.lower() not in ("content-length", "content-type")
                              )
             data = None
             if req.has_data():
                 data = req.get_data()
-            return urllib2.Request(newurl,
+            return urllib.request.Request(newurl,
                            data=data,
                            headers=newheaders,
                            origin_req_host=req.get_origin_req_host(),
                            unverifiable=True)
         else:
-            raise urllib2.HTTPError(req.get_full_url(), code, msg, headers, fp)
+            raise urllib.error.HTTPError(req.get_full_url(), code, msg, headers, fp)
 
 class Connection(object):
     def __init__(self , baseUrl , username , password , port=4040 , 
@@ -1204,8 +1204,8 @@ class Connection(object):
     # Private internal methods
     def _getOpener(self , username , passwd):
         creds = b64encode('%s:%s' % (username , passwd))
-        opener = urllib2.build_opener(PysHTTPRedirectHandler , 
-            urllib2.HTTPSHandler)
+        opener = urllib.request.build_opener(PysHTTPRedirectHandler , 
+            urllib.request.HTTPSHandler)
         opener.addheaders = [('Authorization' , 'Basic %s' % creds)]
         return opener
 
@@ -1213,7 +1213,7 @@ class Connection(object):
         """
         Given a dictionary, it cleans out all the values set to None
         """
-        for k , v in d.items():
+        for k , v in list(d.items()):
             if v is None:
                 del d[k]
         return d
@@ -1223,7 +1223,7 @@ class Connection(object):
         qstring.update(query)
         url = '%s:%d/%s/%s' % (self._baseUrl , self._port , self._serverPath ,
             viewName)
-        req = urllib2.Request(url , urlencode(qstring))
+        req = urllib.request.Request(url , urlencode(qstring))
         return req
 
     def _getRequestWithList(self , viewName , listName , alist , query={}):
@@ -1239,8 +1239,8 @@ class Connection(object):
         data.write(urlencode(qstring))
         for i in alist:
             data.write('&%s' % urlencode({listName: i}))
-        print data.getvalue()
-        req = urllib2.Request(url , data.getvalue())
+        print(data.getvalue())
+        req = urllib.request.Request(url , data.getvalue())
         return req
 
     def _doInfoReq(self , req):
