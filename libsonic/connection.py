@@ -135,7 +135,8 @@ class Connection(object):
         req = self._getRequest(viewName)
         try:
             res = self._doInfoReq(req)
-        except:
+        except Exception as e:
+            print(e)
             return False
         if res['status'] == 'ok':
             return True
@@ -1203,7 +1204,8 @@ class Connection(object):
 
     # Private internal methods
     def _getOpener(self , username , passwd):
-        creds = b64encode('%s:%s' % (username , passwd))
+        b = str.encode('{0}:{1}'.format(username , passwd))
+        creds = b64encode(b)
         opener = urllib.request.build_opener(PysHTTPRedirectHandler , 
             urllib.request.HTTPSHandler)
         opener.addheaders = [('Authorization' , 'Basic %s' % creds)]
@@ -1223,7 +1225,7 @@ class Connection(object):
         qstring.update(query)
         url = '%s:%d/%s/%s' % (self._baseUrl , self._port , self._serverPath ,
             viewName)
-        req = urllib.request.Request(url , urlencode(qstring))
+        req = urllib.request.Request(url , str.encode(urlencode(qstring)))
         return req
 
     def _getRequestWithList(self , viewName , listName , alist , query={}):
@@ -1247,6 +1249,8 @@ class Connection(object):
         # Returns a parsed dictionary version of the result
         res = self._opener.open(req)
         dres = json.loads(res.read())
+        import pprint
+        pprint(dres)
         return dres['subsonic-response']
 
     def _doBinReq(self , req):
