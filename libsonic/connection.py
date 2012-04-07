@@ -133,6 +133,7 @@ class Connection(object):
         viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
+        print(req)
         try:
             res = self._doInfoReq(req)
         except Exception as e:
@@ -1205,10 +1206,10 @@ class Connection(object):
     # Private internal methods
     def _getOpener(self , username , passwd):
         b = str.encode('{0}:{1}'.format(username , passwd))
-        creds = b64encode(b)
+        creds = bytes.decode(b64encode(b))
         opener = urllib.request.build_opener(PysHTTPRedirectHandler , 
             urllib.request.HTTPSHandler)
-        opener.addheaders = [('Authorization' , 'Basic %s' % creds)]
+        opener.addheaders = [('Authorization' , 'Basic {0}' % creds)]
         return opener
 
     def _getQueryDict(self , d):
