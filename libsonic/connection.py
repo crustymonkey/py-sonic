@@ -18,7 +18,6 @@ along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 from base64 import b64encode
 from urllib.parse import urlencode
 from .errors import *
-from pprint import pprint
 from io import StringIO
 import json , urllib.request, urllib.error, urllib.parse
 
@@ -133,11 +132,9 @@ class Connection(object):
         viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
-        print(req)
         try:
             res = self._doInfoReq(req)
         except Exception as e:
-            print(e)
             return False
         if res['status'] == 'ok':
             return True
@@ -1209,7 +1206,7 @@ class Connection(object):
         creds = bytes.decode(b64encode(b))
         opener = urllib.request.build_opener(PysHTTPRedirectHandler , 
             urllib.request.HTTPSHandler)
-        opener.addheaders = [('Authorization' , 'Basic {0}' % creds)]
+        opener.addheaders = [('Authorization' , 'Basic {0}'.format(creds))]
         return opener
 
     def _getQueryDict(self , d):
@@ -1242,25 +1239,22 @@ class Connection(object):
         data.write(urlencode(qstring))
         for i in alist:
             data.write('&%s' % urlencode({listName: i}))
-        print(data.getvalue())
         req = urllib.request.Request(url , data.getvalue())
         return req
 
     def _doInfoReq(self , req):
         # Returns a parsed dictionary version of the result
         res = self._opener.open(req)
-        dres = json.loads(res.read())
-        import pprint
-        pprint(dres)
+        dres = json.loads(bytes.decode(res.read()))
         return dres['subsonic-response']
 
     def _doBinReq(self , req):
         res = self._opener.open(req)
-        contType = res.info().getheader('Content-Type')
+        contType = res.info().get('Content-Type')
         if contType:
             if contType.startswith('text/html') or \
                     contType.startswith('application/json'):
-                dres = json.loads(res.read())
+                dres = json.loads(bytes.decode(res.read()))
                 return dres['subsonic-response']
         return res
 
