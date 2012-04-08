@@ -12,6 +12,13 @@ You can also install directly using *pip* or *easy_install*
 
     pip install py-sonic
 
+## PYTHON 3 ##
+
+I've added experimental support for Python 3.  This is not fully tested, but I
+do encourage people to fork the repository and test off the "python3" branch
+and issue pull requests.  If you don't want to go through that trouble, bug
+reports are always welcome too!
+
 ## USAGE ##
 
 This library follows the REST API almost exactly (for now).  If you follow the 
