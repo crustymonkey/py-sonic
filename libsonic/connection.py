@@ -22,7 +22,7 @@ from pprint import pprint
 from cStringIO import StringIO
 import json , urllib2
 
-API_VERSION = '1.7.0'
+API_VERSION = '1.8.0'
 
 class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
     """
@@ -427,11 +427,49 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getPlaylists(self):
+    def search3(self , query , artistCount=20 , artistOffset=0 , albumCount=20 ,
+            albumOffset=0 , songCount=20 , songOffset=0):
+        """
+        since: 1.8.0
+
+        Works the same way as search2, but uses ID3 tags for
+        organization
+
+        query:str           The search query
+        artistCount:int     Max number of artists to return [default: 20]
+        artistOffset:int    Search offset for artists (for paging) [default: 0]
+        albumCount:int      Max number of albums to return [default: 20]
+        albumOffset:int     Search offset for albums (for paging) [default: 0]
+        songCount:int       Max number of songs to return [default: 20]
+        songOffset:int      Search offset for songs (for paging) [default: 0]
+
+        Returns a dict like the following:
+            TODO: Add a dict from testing
+        """
+        methodName = 'search3'
+        viewName = '%s.view' % methodName
+
+        q = {'query': query , 'artistCount': artistCount , 
+            'artistOffset': artistOffset , 'albumCount': albumCount ,
+            'albumOffset': albumOffset , 'songCount': songCount ,
+            'songOffset': songOffset}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getPlaylists(self , username=None):
         """
         since: 1.0.0
 
         Returns the ID and name of all saved playlists
+        The "username" option was added in 1.8.0.
+
+        username:str        If specified, return playlists for this user
+                            rather than for the authenticated user.  The
+                            authenticated user must have admin role
+                            if this parameter is used
 
         Returns a dict like the following:
 
@@ -446,7 +484,9 @@ class Connection(object):
         methodName = 'getPlaylists'
         viewName = '%s.view' % methodName
 
-        req = self._getRequest(viewName)
+        q = self._getQueryDict({'username': username})
+
+        req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -565,7 +605,8 @@ class Connection(object):
             self._checkStatus(res)
         return res
 
-    def stream(self , sid , maxBitRate=0):
+    def stream(self , sid , maxBitRate=0 , tformat=None , timeOffset=None ,
+            size=None , estimateContentLength=False):
         """
         since: 1.0.0
 
@@ -577,6 +618,18 @@ class Connection(object):
                         kilobits per second. If set to zero (default), no limit 
                         is imposed. Legal values are: 0, 32, 40, 48, 56, 64, 
                         80, 96, 112, 128, 160, 192, 224, 256 and 320.
+        tformat:str     (since: 1.6.0) Specifies the target format
+                        (e.g. "mp3" or "flv") in case there are multiple
+                        applicable transcodings
+        timeOffset:int  (since: 1.6.0) Only applicable to video 
+                        streaming.  Start the stream at the given
+                        offset (in seconds) into the video
+        size:str        (since: 1.6.0) The requested video size in
+                        WxH, for instance 640x480
+        estimateContentLength:bool  (since: 1.8.0) If set to True,
+                                    the HTTP Content-Length header
+                                    will be set to an estimated
+                                    value for trancoded media
 
         Returns the file-like object for reading or raises an exception 
         on error
@@ -584,7 +637,9 @@ class Connection(object):
         methodName = 'stream'
         viewName = '%s.view' % methodName
         
-        q = {'id': sid , 'maxBitRate': maxBitRate}
+        q = self._getQueryDict({'id': sid , 'maxBitRate': maxBitRate ,
+            'format': tformat , 'timeOffset': timeOffset , 'size': size ,
+            'estimateContentLength': estimateContentLength})
 
         req = self._getRequest(viewName , q)
         res = self._doBinReq(req)
@@ -715,7 +770,7 @@ class Connection(object):
             adminRole=False , settingsRole=True , streamRole=True ,
             jukeboxRole=False , downloadRole=False , uploadRole=False ,
             playlistRole=False , coverArtRole=False , commentRole=False ,
-            podcastRole=False):
+            podcastRole=False , shareRole=False):
         """
         since: 1.1.0
 
@@ -742,7 +797,7 @@ class Connection(object):
             'jukeboxRole': jukeboxRole , 'downloadRole': downloadRole ,
             'uploadRole': uploadRole , 'playlistRole': playlistRole ,
             'coverArtRole': coverArtRole , 'commentRole': commentRole ,
-            'podcastRole': podcastRole}
+            'podcastRole': podcastRole , 'shareRole': shareRole}
 
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
@@ -836,7 +891,9 @@ class Connection(object):
         web interface
 
         ltype:str       The list type. Must be one of the following: random, 
-                        newest, highest, frequent, recent
+                        newest, highest, frequent, recent, 
+                        (since 1.8.0 -> )starred, alphabeticalByName, 
+                        alphabeticalByArtist
         size:int        The number of albums to return. Max 500
         offset:int      The list offset. Use for paging. Max 5000
 
@@ -858,6 +915,34 @@ class Connection(object):
          u'xmlns': u'http://subsonic.org/restapi'}
         """
         methodName = 'getAlbumList'
+        viewName = '%s.view' % methodName
+
+        q = {'type': ltype , 'size': size , 'offset': offset}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getAlbumList2(self , ltype , size=10 , offset=0):
+        """
+        since 1.8.0
+
+        Returns a list of random, newest, highest rated etc. albums. 
+        This is similar to getAlbumList, but uses ID3 tags for
+        organization
+
+        ltype:str       The list type. Must be one of the following: random, 
+                        newest, highest, frequent, recent, 
+                        (since 1.8.0 -> )starred, alphabeticalByName, 
+                        alphabeticalByArtist
+        size:int        The number of albums to return. Max 500
+        offset:int      The list offset. Use for paging. Max 5000
+
+        Returns a dict like the following:
+            TODO: Add a dict from testing
+        """
+        methodName = 'getAlbumList2'
         viewName = '%s.view' % methodName
 
         q = {'type': ltype , 'size': size , 'offset': offset}
@@ -1201,6 +1286,271 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
+    def getArtists(self):
+        """
+        since 1.8.0
+
+        Similar to getIndexes(), but this method uses the ID3 tags to
+        determine the artist
+
+        Returns a dict like the following:
+            TODO: add dict from testing
+        """
+        methodName = 'getArtists'
+        viewName = '%s.view' % methodName
+        
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getArtist(self , id):
+        """
+        since 1.8.0
+
+        Returns the info (albums) for an artist.  This method uses 
+        the ID3 tags for organization
+
+        id:str      The artist ID
+
+        Returns a dict like the following:
+            TODO: add dict from testing
+        """
+        methodName = 'getArtist'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': id})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getAlbum(self , id):
+        """
+        since 1.8.0
+
+        Returns the info and songs for an album.  This method uses
+        the ID3 tags for organization
+
+        id:str      The album ID
+
+        Returns a dict like the following:
+            TODO: add dict from testing
+        """
+        methodName = 'getAlbum'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': id})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getSong(self , id):
+        """
+        since 1.8.0
+
+        Returns the info for a song.  This method uses the ID3 
+        tags for organization
+
+        id:str      The song ID
+
+        Returns a dict like the following:
+            TODO: add dict from testing
+        """
+        methodName = 'getSong'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': id})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getVideos(self):
+        """
+        since 1.8.0
+
+        Returns all video files
+
+        Returns a dict like the following:
+            TODO: add dict from testing
+        """
+        methodName = 'getVideos'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getStarred(self):
+        """
+        since 1.8.0
+
+        Returns starred songs, albums and artists
+
+        Returns a dict like the following:
+            TODO: add a dict from testing
+        """
+        methodName = 'getStarred'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getStarred2(self):
+        """
+        since 1.8.0
+
+        Returns starred songs, albums and artists like getStarred(),
+        but this uses ID3 tags for organization
+
+        Returns a dict like the following:
+            TODO: add a dict from testing
+        """
+        methodName = 'getStarred2'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def updatePlaylist(self , lid , name=None , comment=None , songIdsToAdd=[] ,
+            songIndexesToRemove=[]):
+        """
+        since 1.8.0
+
+        Updates a playlist.  Only the owner of a playlist is allowed to
+        update it.
+
+        lid:str                 The playlist id
+        name:str                The human readable name of the playlist
+        comment:str             The playlist comment
+        songIdsToAdd:list       A list of song IDs to add to the playlist
+        songIndexesToRemove:list    Remove the songs at the positions in the
+                                    playlist.  Note that this is always a
+                                    list
+        
+        Returns a normal status response dict
+        """
+        methodName = 'updatePlaylist'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'playlistId': lid , 'name': name ,
+            'comment': comment})
+        if not isinstance(songIdsToAdd , list) or isinstance(songIdsToAdd ,
+                tuple):
+            songIdsToAdd = [songIdsToAdd]
+        if not isinstance(songIndexesToRemove , list) or isinstance(
+                songIndexesToRemove , tuple):
+            songIndexesToRemove = [songIndexesToRemove]
+        listMap = {'songIdToAdd': songIdsToAdd ,
+            'songIndexToRemove': songIndexesToRemove}
+        req = self._getRequestWithLists(viewName , listMap , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getAvatar(self , username):
+        """
+        since 1.8.0
+
+        Returns the avatar for a user
+
+        username:str    The user to retrieve the avatar for
+
+        Returns the file-like object for reading or raises an exception 
+        on error
+        """
+        methodName = 'getAvatar'
+        viewName = '%s.view' % methodName
+        
+        q = {'username': username}
+
+        req = self._getRequest(viewName , q)
+        res = self._doBinReq(req)
+        if isinstance(res , dict):
+            self._checkStatus(res)
+        return res
+
+    def star(self , sids=[] , albumIds=[] , artistIds=[]):
+        """
+        since 1.8.0
+
+        Attaches a star to songs, albums or artists
+
+        sids:list       A list of song IDs to star
+        albumIds:list   A list of album IDs to star.  Use this rather than
+                        "sids" if the client access the media collection
+                        according to ID3 tags rather than file
+                        structure
+        artistIds:list  The ID of an artist to star.  Use this rather
+                        than sids if the client access the media
+                        collection according to ID3 tags rather
+                        than file structure
+
+        Returns a normal status response dict
+        """
+        methodName = 'star'
+        viewName = '%s.view' % methodName
+
+        if not isinstance(sids , list) or isinstance(sids , tuple):
+            sids = [sids]
+        if not isinstance(albumIds , list) or isinstance(albumIds , tuple):
+            albumIds = [albumIds]
+        if not isinstance(artistIds , list) or isinstance(artistIds , tuple):
+            artistIds = [artistIds]
+        listMap = {'id': sids ,
+            'albumId': albumIds ,
+            'artistId': artistIds}
+        req = self._getRequestWithLists(viewName , listMap)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def unstar(self , sids=[] , albumIds=[] , artistIds=[]):
+        """
+        since 1.8.0
+
+        Removes a star to songs, albums or artists.  Basically, the
+        same as star in reverse
+
+        sids:list       A list of song IDs to star
+        albumIds:list   A list of album IDs to star.  Use this rather than
+                        "sids" if the client access the media collection
+                        according to ID3 tags rather than file
+                        structure
+        artistIds:list  The ID of an artist to star.  Use this rather
+                        than sids if the client access the media
+                        collection according to ID3 tags rather
+                        than file structure
+
+        Returns a normal status response dict
+        """
+        methodName = 'unstar'
+        viewName = '%s.view' % methodName
+
+        if not isinstance(sids , list) or isinstance(sids , tuple):
+            sids = [sids]
+        if not isinstance(albumIds , list) or isinstance(albumIds , tuple):
+            albumIds = [albumIds]
+        if not isinstance(artistIds , list) or isinstance(artistIds , tuple):
+            artistIds = [artistIds]
+        listMap = {'id': sids ,
+            'albumId': albumIds ,
+            'artistId': artistIds}
+        req = self._getRequestWithLists(viewName , listMap)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
     # Private internal methods
     def _getOpener(self , username , passwd):
         creds = b64encode('%s:%s' % (username , passwd))
@@ -1239,7 +1589,28 @@ class Connection(object):
         data.write(urlencode(qstring))
         for i in alist:
             data.write('&%s' % urlencode({listName: i}))
-        print data.getvalue()
+        req = urllib2.Request(url , data.getvalue())
+        return req
+
+    def _getRequestWithLists(self , viewName , listMap , query={}):
+        """
+        Like _getRequestWithList(), but you must pass a dictionary 
+        that maps the listName to the list.  This allows for multiple 
+        list parameters to be used, like in updatePlaylist()
+
+        viewName:str        The name of the view
+        listMap:dict        A mapping of listName to a list of entries
+        query:dict          The normal query dict
+        """
+        qstring = {'f': 'json' , 'v': self._apiVersion , 'c': self._appName}
+        qstring.update(query)
+        url = '%s:%d/%s/%s' % (self._baseUrl , self._port , self._serverPath ,
+            viewName)
+        data = StringIO()
+        data.write(urlencode(qstring))
+        for k , l in listMap:
+            for i in l:
+                data.write('&%s' % urlencode({k: i}))
         req = urllib2.Request(url , data.getvalue())
         return req
 
