@@ -443,8 +443,52 @@ class Connection(object):
         songCount:int       Max number of songs to return [default: 20]
         songOffset:int      Search offset for songs (for paging) [default: 0]
 
-        Returns a dict like the following:
-            TODO: Add a dict from testing
+        Returns a dict like the following (search for "Tune Yards":
+            {u'searchResult3': {u'album': [{u'artist': u'Tune-Yards',
+                                u'artistId': 1,
+                                u'coverArt': u'al-7',
+                                u'created': u'2012-01-30T12:35:33',
+                                u'duration': 3229,
+                                u'id': 7,
+                                u'name': u'Bird-Brains',
+                                u'songCount': 13},
+                               {u'artist': u'Tune-Yards',
+                                u'artistId': 1,
+                                u'coverArt': u'al-8',
+                                u'created': u'2011-03-22T15:08:00',
+                                u'duration': 2531,
+                                u'id': 8,
+                                u'name': u'W H O K I L L',
+                                u'songCount': 10}],
+                    u'artist': {u'albumCount': 2,
+                                u'coverArt': u'ar-1',
+                                u'id': 1,
+                                u'name': u'Tune-Yards'},
+                    u'song': [{u'album': u'Bird-Brains',
+                               u'albumId': 7,
+                               u'artist': u'Tune-Yards',
+                               u'artistId': 1,
+                               u'bitRate': 160,
+                               u'contentType': u'audio/mpeg',
+                               u'coverArt': 105,
+                               u'created': u'2012-01-30T12:35:33',
+                               u'duration': 328,
+                               u'genre': u'Lo-Fi',
+                               u'id': 107,
+                               u'isDir': False,
+                               u'isVideo': False,
+                               u'parent': 105,
+                               u'path': u'Tune Yards/Bird-Brains/10-tune-yards-fiya.mp3',
+                               u'size': 6588498,
+                               u'suffix': u'mp3',
+                               u'title': u'Fiya',
+                               u'track': 10,
+                               u'type': u'music',
+                               u'year': 2009}]},
+
+             u'status': u'ok',
+             u'version': u'1.5.0',
+             u'xmlns': u'http://subsonic.org/restapi'}
         """
         methodName = 'search3'
         viewName = '%s.view' % methodName
@@ -940,7 +984,25 @@ class Connection(object):
         offset:int      The list offset. Use for paging. Max 5000
 
         Returns a dict like the following:
-            TODO: Add a dict from testing
+           {u'albumList2': {u'album': [{u'artist': u'Massive Attack',
+                             u'artistId': 0,
+                             u'coverArt': u'al-0',
+                             u'created': u'2009-08-28T10:00:44',
+                             u'duration': 3762,
+                             u'id': 0,
+                             u'name': u'100th Window',
+                             u'songCount': 9},
+                            {u'artist': u'Massive Attack',
+                             u'artistId': 0,
+                             u'coverArt': u'al-5',
+                             u'created': u'2003-11-03T22:00:00',
+                             u'duration': 2715,
+                             u'id': 5,
+                             u'name': u'Blue Lines',
+                             u'songCount': 9}]},
+            u'status': u'ok',
+            u'version': u'1.8.0',
+            u'xmlns': u'http://subsonic.org/restapi'}
         """
         methodName = 'getAlbumList2'
         viewName = '%s.view' % methodName
@@ -1103,7 +1165,7 @@ class Connection(object):
                                           u'artist': u'BBC Radio 5 live',
                                           u'bitRate': 64,
                                           u'contentType': u'audio/mpeg',
-                                          u'coverArt': u'2f6f70742f737562736f6e69632f706f6463617374732f4472204b61726c20616e6420746865204e616b656420536369656e746973742f64726b61726c5f32303131303831382d30343036612e6d7033',
+                                          u'coverArt': u'2f6f7074',
                                           u'description': u'Dr Karl answers all your science related questions.',
                                           u'duration': 2902,
                                           u'genre': u'Podcast',
@@ -1294,7 +1356,19 @@ class Connection(object):
         determine the artist
 
         Returns a dict like the following:
-            TODO: add dict from testing
+            {u'artists': {u'index': [{u'artist': {u'albumCount': 7,
+                                      u'coverArt': u'ar-0',
+                                      u'id': 0,
+                                      u'name': u'Massive Attack'},
+                          u'name': u'M'},
+                         {u'artist': {u'albumCount': 2,
+                                      u'coverArt': u'ar-1',
+                                      u'id': 1,
+                                      u'name': u'Tune-Yards'},
+                          u'name': u'T'}]},
+             u'status': u'ok',
+             u'version': u'1.8.0',
+             u'xmlns': u'http://subsonic.org/restapi'}    
         """
         methodName = 'getArtists'
         viewName = '%s.view' % methodName
@@ -1314,7 +1388,30 @@ class Connection(object):
         id:str      The artist ID
 
         Returns a dict like the following:
-            TODO: add dict from testing
+            
+           {u'artist': {u'album': [{u'artist': u'Tune-Yards',
+                         u'artistId': 1,
+                         u'coverArt': u'al-7',
+                         u'created': u'2012-01-30T12:35:33',
+                         u'duration': 3229,
+                         u'id': 7,
+                         u'name': u'Bird-Brains',
+                         u'songCount': 13},
+                        {u'artist': u'Tune-Yards',
+                         u'artistId': 1,
+                         u'coverArt': u'al-8',
+                         u'created': u'2011-03-22T15:08:00',
+                         u'duration': 2531,
+                         u'id': 8,
+                         u'name': u'W H O K I L L',
+                         u'songCount': 10}],
+             u'albumCount': 2,
+             u'coverArt': u'ar-1',
+             u'id': 1,
+             u'name': u'Tune-Yards'},
+            u'status': u'ok',
+            u'version': u'1.8.0',
+            u'xmlns': u'http://subsonic.org/restapi'}
         """
         methodName = 'getArtist'
         viewName = '%s.view' % methodName
@@ -1336,7 +1433,39 @@ class Connection(object):
         id:str      The album ID
 
         Returns a dict like the following:
-            TODO: add dict from testing
+            
+           {u'album': {u'artist': u'Massive Attack',
+            u'artistId': 0,
+            u'coverArt': u'al-0',
+            u'created': u'2009-08-28T10:00:44',
+            u'duration': 3762,
+            u'id': 0,
+            u'name': u'100th Window',
+            u'song': [{u'album': u'100th Window',
+                       u'albumId': 0,
+                       u'artist': u'Massive Attack',
+                       u'artistId': 0,
+                       u'bitRate': 192,
+                       u'contentType': u'audio/mpeg',
+                       u'coverArt': 2,
+                       u'created': u'2009-08-28T10:00:57',
+                       u'duration': 341,
+                       u'genre': u'Rock',
+                       u'id': 14,
+                       u'isDir': False,
+                       u'isVideo': False,
+                       u'parent': 2,
+                       u'path': u'Massive Attack/100th Window/01 - Future Proof.mp3',
+                       u'size': 8184445,
+                       u'suffix': u'mp3',
+                       u'title': u'Future Proof',
+                       u'track': 1,
+                       u'type': u'music',
+                       u'year': 2003}],
+              u'songCount': 9},
+            u'status': u'ok',
+            u'version': u'1.8.0',
+            u'xmlns': u'http://subsonic.org/restapi'}
         """
         methodName = 'getAlbum'
         viewName = '%s.view' % methodName
@@ -1358,7 +1487,31 @@ class Connection(object):
         id:str      The song ID
 
         Returns a dict like the following:
-            TODO: add dict from testing
+            {u'song': {u'album': u'W H O K I L L',
+               u'albumId': 8,
+               u'artist': u'Tune-Yards',
+               u'artistId': 1,
+               u'bitRate': 320,
+               u'contentType': u'audio/mpeg',
+               u'coverArt': 106,
+               u'created': u'2011-03-22T15:08:00',
+               u'discNumber': 1,
+               u'duration': 192,
+               u'genre': u'Indie Rock',
+               u'id': 120,
+               u'isDir': False,
+               u'isVideo': False,
+               u'parent': 106,
+               u'path': u'Tune Yards/Who Kill/10 Killa.mp3',
+               u'size': 7692656,
+               u'suffix': u'mp3',
+               u'title': u'Killa',
+               u'track': 10,
+               u'type': u'music',
+               u'year': 2011},
+             u'status': u'ok',
+             u'version': u'1.8.0',
+             u'xmlns': u'http://subsonic.org/restapi'}
         """
         methodName = 'getSong'
         viewName = '%s.view' % methodName
@@ -1377,7 +1530,22 @@ class Connection(object):
         Returns all video files
 
         Returns a dict like the following:
-            TODO: add dict from testing
+            {u'status': u'ok',
+             u'version': u'1.8.0',
+             u'videos': {u'video': {u'bitRate': 384,
+                        u'contentType': u'video/x-matroska',
+                        u'created': u'2012-08-26T13:36:44',
+                        u'duration': 1301,
+                        u'id': 130,
+                        u'isDir': False,
+                        u'isVideo': True,
+                        u'path': u'South Park - 16x07 - Cartman Finds Love.mkv',
+                        u'size': 287309613,
+                        u'suffix': u'mkv',
+                        u'title': u'South Park - 16x07 - Cartman Finds Love',
+                        u'transcodedContentType': u'video/x-flv',
+                        u'transcodedSuffix': u'flv'}},
+             u'xmlns': u'http://subsonic.org/restapi'}
         """
         methodName = 'getVideos'
         viewName = '%s.view' % methodName
@@ -1394,7 +1562,60 @@ class Connection(object):
         Returns starred songs, albums and artists
 
         Returns a dict like the following:
-            TODO: add a dict from testing
+            {u'starred': {u'album': {u'album': u'Bird-Brains',
+                         u'artist': u'Tune-Yards',
+                         u'coverArt': 105,
+                         u'created': u'2012-01-30T13:16:58',
+                         u'id': 105,
+                         u'isDir': True,
+                         u'parent': 104,
+                         u'starred': u'2012-08-26T13:18:34',
+                         u'title': u'Bird-Brains'},
+              u'song': [{u'album': u'Mezzanine',
+                         u'albumId': 4,
+                         u'artist': u'Massive Attack',
+                         u'artistId': 0,
+                         u'bitRate': 256,
+                         u'contentType': u'audio/mpeg',
+                         u'coverArt': 6,
+                         u'created': u'2009-06-15T07:48:28',
+                         u'duration': 298,
+                         u'genre': u'Dub',
+                         u'id': 72,
+                         u'isDir': False,
+                         u'isVideo': False,
+                         u'parent': 6,
+                         u'path': u'Massive Attack/Mezzanine/Massive Attack_02_mezzanine.mp3',
+                         u'size': 9564160,
+                         u'starred': u'2012-08-26T13:19:26',
+                         u'suffix': u'mp3',
+                         u'title': u'Risingson',
+                         u'track': 2,
+                         u'type': u'music'},
+                        {u'album': u'Mezzanine',
+                         u'albumId': 4,
+                         u'artist': u'Massive Attack',
+                         u'artistId': 0,
+                         u'bitRate': 256,
+                         u'contentType': u'audio/mpeg',
+                         u'coverArt': 6,
+                         u'created': u'2009-06-15T07:48:25',
+                         u'duration': 380,
+                         u'genre': u'Dub',
+                         u'id': 71,
+                         u'isDir': False,
+                         u'isVideo': False,
+                         u'parent': 6,
+                         u'path': u'Massive Attack/Mezzanine/Massive Attack_01_mezzanine.mp3',
+                         u'size': 12179456,
+                         u'starred': u'2012-08-26T13:19:03',
+                         u'suffix': u'mp3',
+                         u'title': u'Angel',
+                         u'track': 1,
+                         u'type': u'music'}]},
+             u'status': u'ok',
+             u'version': u'1.8.0',
+             u'xmlns': u'http://subsonic.org/restapi'}
         """
         methodName = 'getStarred'
         viewName = '%s.view' % methodName
@@ -1412,7 +1633,8 @@ class Connection(object):
         but this uses ID3 tags for organization
 
         Returns a dict like the following:
-            TODO: add a dict from testing
+            
+            **See the output from getStarred()**
         """
         methodName = 'getStarred2'
         viewName = '%s.view' % methodName
@@ -1462,7 +1684,7 @@ class Connection(object):
         """
         since 1.8.0
 
-        Returns the avatar for a user
+        Returns the avatar for a user or None if the avatar does not exist
 
         username:str    The user to retrieve the avatar for
 
@@ -1475,7 +1697,11 @@ class Connection(object):
         q = {'username': username}
 
         req = self._getRequest(viewName , q)
-        res = self._doBinReq(req)
+        try:
+            res = self._doBinReq(req)
+        except urllib2.HTTPError:
+            # Avatar is not set/does not exist, return None
+            return None
         if isinstance(res , dict):
             self._checkStatus(res)
         return res
@@ -1608,7 +1834,7 @@ class Connection(object):
             viewName)
         data = StringIO()
         data.write(urlencode(qstring))
-        for k , l in listMap:
+        for k , l in listMap.iteritems():
             for i in l:
                 data.write('&%s' % urlencode({k: i}))
         req = urllib2.Request(url , data.getvalue())
