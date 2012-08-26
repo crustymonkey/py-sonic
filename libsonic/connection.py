@@ -1656,9 +1656,10 @@ class Connection(object):
         name:str                The human readable name of the playlist
         comment:str             The playlist comment
         songIdsToAdd:list       A list of song IDs to add to the playlist
-        songIndexesToRemove:list    Remove the songs at the positions in the
-                                    playlist.  Note that this is always a
-                                    list
+        songIndexesToRemove:list    Remove the songs at the 
+                                    0 BASED INDEXED POSITIONS in the
+                                    playlist, NOT the song ids.  Note that 
+                                    this is always a list.
         
         Returns a normal status response dict
         """
