@@ -20,9 +20,32 @@ from urllib import urlencode
 from errors import *
 from pprint import pprint
 from cStringIO import StringIO
-import json , urllib2
+import json , urllib2, httplib, socket, ssl
 
 API_VERSION = '1.8.0'
+
+
+class HTTPSConnectionV3(httplib.HTTPSConnection):
+    def __init__(self, *args, **kwargs):
+        httplib.HTTPSConnection.__init__(self, *args, **kwargs)
+        
+    def connect(self):
+        sock = socket.create_connection((self.host, self.port), self.timeout)
+        if self._tunnel_host:
+            self.sock = sock
+            self._tunnel()
+        try:
+            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file, ssl_version=ssl.PROTOCOL_SSLv3)
+        except ssl.SSLError, e:
+            print("Trying SSLv3.")
+            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file, ssl_version=ssl.PROTOCOL_SSLv23)           
+
+class HTTPSHandlerV3(urllib2.HTTPSHandler):
+    def https_open(self, req):
+        return self.do_open(HTTPSConnectionV3, req)
+# install opener
+urllib2.install_opener(urllib2.build_opener(HTTPSHandlerV3()))
+
 
 class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
     """
@@ -1782,7 +1805,7 @@ class Connection(object):
     def _getOpener(self , username , passwd):
         creds = b64encode('%s:%s' % (username , passwd))
         opener = urllib2.build_opener(PysHTTPRedirectHandler , 
-            urllib2.HTTPSHandler)
+           HTTPSHandlerV3)
         opener.addheaders = [('Authorization' , 'Basic %s' % creds)]
         return opener
 
