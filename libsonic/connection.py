@@ -1907,3 +1907,11 @@ class Connection(object):
         if ts is None:
             return None
         return int(ts * 1000)
+
+class Connection2(Connection):
+    """
+    This connection class is used to return logical objects instead of raw
+    dictionary objects.  This is the more "pythonic" approach to using this
+    library.  A separate class was created for backwards compatibility.
+    """
+    pass
