@@ -687,7 +687,8 @@ class Connection(object):
                         80, 96, 112, 128, 160, 192, 224, 256 and 320.
         tformat:str     (since: 1.6.0) Specifies the target format
                         (e.g. "mp3" or "flv") in case there are multiple
-                        applicable transcodings
+                        applicable transcodings (since: 1.9.0) You can use
+                        the special value "raw" to disable transcoding
         timeOffset:int  (since: 1.6.0) Only applicable to video 
                         streaming.  Start the stream at the given
                         offset (in seconds) into the video
@@ -1172,12 +1173,17 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getPodcasts(self):
+    def getPodcasts(self , incEpisodes=True , pid=None):
         """
         since: 1.6.0
 
         Returns all podcast channels the server subscribes to and their 
         episodes.
+
+        incEpisodes:bool    (since: 1.9.0) Whether to include Podcast 
+                            episodes in the returned result.
+        id:str              (since: 1.9.0) If specified, only return 
+                            the Podcast channel with this ID.
 
         Returns a dict like the following:
         {u'status': u'ok',
@@ -1225,7 +1231,9 @@ class Connection(object):
         methodName = 'getPodcasts'
         viewName = '%s.view' % methodName
 
-        req = self._getRequest(viewName)
+        q = self._getQueryDict({'includeEpisodes': incEpisodes , 
+            'id': pid})
+        req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -1800,6 +1808,92 @@ class Connection(object):
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
+
+    def getGenres(self):
+        """
+        since 1.9.0
+        """
+        pass
+    
+    def getSongsByGenre(self , genre , count=10 , offset=0):
+        """
+        since 1.9.0
+        """
+        pass
+
+    def hls (self , mid , bitrate=None):
+        """
+        since 1.8.0
+
+        Creates an HTTP live streaming playlist for streaming video or
+        audio HLS is a streaming protocol implemented by Apple and 
+        works by breaking the overall stream into a sequence of small 
+        HTTP-based file downloads. It's supported by iOS and newer 
+        versions of Android. This method also supports adaptive 
+        bitrate streaming, see the bitRate parameter.
+
+        mid:str     The ID of the media to stream
+        bitrate:int If specified, the server will attempt to limit the 
+                    bitrate to this value, in kilobits per second. If 
+                    this parameter is specified more than once, the 
+                    server will create a variant playlist, suitable 
+                    for adaptive bitrate streaming. The playlist will 
+                    support streaming at all the specified bitrates. 
+                    The server will automatically choose video dimensions 
+                    that are suitable for the given bitrates. 
+                    (since: 1.9.0) you may explicitly request a certain 
+                    width (480) and height (360) like so: 
+                    bitRate=1000@480x360
+        """
+        pass
+
+    def refreshPodcasts(self):
+        """
+        since: 1.9.0
+        """
+        pass
+
+    def createPodcastChannel(self , url):
+        """
+        since: 1.9.0
+        """
+        pass
+
+    def deletePodcastEpisode(self , pid):
+        """
+        since: 1.9.0
+        """
+        pass
+
+    def downloadPodcastEpisode(self , pid):
+        """
+        since: 1.9.0
+        """
+        pass
+
+    def getInternetRadioStations(self):
+        """
+        since: 1.9.0
+        """
+        pass
+
+    def getBookmarks(self):
+        """
+        since: 1.9.0
+        """
+        pass
+
+    def createBookmark(self , bid , position , comment=None):
+        """
+        since: 1.9.0
+        """
+        pass
+
+    def deleteBookmark(self , bid):
+        """
+        since: 1.9.0
+        """
+        pass
 
     # Private internal methods
     def _getOpener(self , username , passwd):
