@@ -17,12 +17,12 @@ along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 
 from base64 import b64encode
 from urllib import urlencode
-from errors import *
+from .errors import *
 from pprint import pprint
 from cStringIO import StringIO
 import json , urllib2, httplib, socket, ssl
 
-API_VERSION = '1.8.0'
+API_VERSION = '1.9.0'
 
 
 class HTTPSConnectionV3(httplib.HTTPSConnection):
@@ -687,7 +687,8 @@ class Connection(object):
                         80, 96, 112, 128, 160, 192, 224, 256 and 320.
         tformat:str     (since: 1.6.0) Specifies the target format
                         (e.g. "mp3" or "flv") in case there are multiple
-                        applicable transcodings
+                        applicable transcodings (since: 1.9.0) You can use
+                        the special value "raw" to disable transcoding
         timeOffset:int  (since: 1.6.0) Only applicable to video 
                         streaming.  Start the stream at the given
                         offset (in seconds) into the video
@@ -1172,12 +1173,17 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getPodcasts(self):
+    def getPodcasts(self , incEpisodes=True , pid=None):
         """
         since: 1.6.0
 
         Returns all podcast channels the server subscribes to and their 
         episodes.
+
+        incEpisodes:bool    (since: 1.9.0) Whether to include Podcast 
+                            episodes in the returned result.
+        pid:str             (since: 1.9.0) If specified, only return 
+                            the Podcast channel with this ID.
 
         Returns a dict like the following:
         {u'status': u'ok',
@@ -1225,7 +1231,9 @@ class Connection(object):
         methodName = 'getPodcasts'
         viewName = '%s.view' % methodName
 
-        req = self._getRequest(viewName)
+        q = self._getQueryDict({'includeEpisodes': incEpisodes , 
+            'id': pid})
+        req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -1797,6 +1805,246 @@ class Connection(object):
             'albumId': albumIds ,
             'artistId': artistIds}
         req = self._getRequestWithLists(viewName , listMap)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getGenres(self):
+        """
+        since 1.9.0
+
+        Returns all genres
+        """
+        methodName = 'getGenres'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+    
+    def getSongsByGenre(self , genre , count=10 , offset=0):
+        """
+        since 1.9.0
+
+        Returns songs in a given genre
+
+        genre:str       The genre, as returned by getGenres()
+        count:int       The maximum number of songs to return.  Max is 500
+                        default: 10
+        offset:int      The offset if you are paging.  default: 0
+        """
+        methodName = 'getGenres'
+        viewName = '%s.view' % methodName
+
+        q = {'genre': genre , 
+            'count': count , 
+            'offset': offset ,
+        }
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def hls (self , mid , bitrate=None):
+        """
+        since 1.8.0
+
+        Creates an HTTP live streaming playlist for streaming video or
+        audio HLS is a streaming protocol implemented by Apple and 
+        works by breaking the overall stream into a sequence of small 
+        HTTP-based file downloads. It's supported by iOS and newer 
+        versions of Android. This method also supports adaptive 
+        bitrate streaming, see the bitRate parameter.
+
+        mid:str     The ID of the media to stream
+        bitrate:str If specified, the server will attempt to limit the 
+                    bitrate to this value, in kilobits per second. If 
+                    this parameter is specified more than once, the 
+                    server will create a variant playlist, suitable 
+                    for adaptive bitrate streaming. The playlist will 
+                    support streaming at all the specified bitrates. 
+                    The server will automatically choose video dimensions 
+                    that are suitable for the given bitrates. 
+                    (since: 1.9.0) you may explicitly request a certain 
+                    width (480) and height (360) like so: 
+                    bitRate=1000@480x360
+
+        Returns the raw m3u8 file as a string
+        """
+        methodName = 'hls'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': mid , 'bitrate': bitrate})
+        req = self._getRequest(viewName , q)
+        try:
+            res = self._doBinReq(req)
+        except urllib2.HTTPError:
+            # Avatar is not set/does not exist, return None
+            return None
+        if isinstance(res , dict):
+            self._checkStatus(res)
+        return res.read()
+
+    def refreshPodcasts(self):
+        """
+        since: 1.9.0
+
+        Tells the server to check for new Podcast episodes. Note: The user
+        must be authorized for Podcast administration
+        """
+        methodName = 'refreshPodcasts'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def createPodcastChannel(self , url):
+        """
+        since: 1.9.0
+
+        Adds a new Podcast channel.  Note: The user must be authorized
+        for Podcast administration
+
+        url:str     The URL of the Podcast to add
+        """
+        methodName = 'createPodcastChannel'
+        viewName = '%s.view' % methodName
+
+        q = {'url': url}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+    
+    def deletePodcastChannel(self , pid):
+        """
+        since: 1.9.0
+
+        Deletes a Podcast channel.  Note: The user must be authorized
+        for Podcast administration
+
+        pid:str         The ID of the Podcast channel to delete
+        """
+        methodName = 'deletePodcastChannel'
+        viewName = '%s.view' % methodName
+
+        q = {'id': pid}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def deletePodcastEpisode(self , pid):
+        """
+        since: 1.9.0
+
+        Deletes a Podcast episode.  Note: The user must be authorized
+        for Podcast administration
+
+        pid:str         The ID of the Podcast episode to delete
+        """
+        methodName = 'deletePodcastEpisode'
+        viewName = '%s.view' % methodName
+
+        q = {'id': pid}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def downloadPodcastEpisode(self , pid):
+        """
+        since: 1.9.0
+
+        Tells the server to start downloading a given Podcast episode. 
+        Note: The user must be authorized for Podcast administration
+
+        pid:str         The ID of the Podcast episode to download
+        """
+        methodName = 'downloadPodcastEpisode'
+        viewName = '%s.view' % methodName
+
+        q = {'id': pid}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getInternetRadioStations(self):
+        """
+        since: 1.9.0
+
+        Returns all internet radio stations
+        """
+        methodName = 'getInternetRadioStations'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getBookmarks(self):
+        """
+        since: 1.9.0
+
+        Returns all bookmarks for this user.  A bookmark is a position
+        within a media file
+        """
+        methodName = 'getBookmarks'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def createBookmark(self , mid , position , comment=None):
+        """
+        since: 1.9.0
+
+        Creates or updates a bookmark (position within a media file).
+        Bookmarks are personal and not visible to other users
+
+        mid:str         The ID of the media file to bookmark.  If a bookmark
+                        already exists for this file, it will be overwritten
+        position:int    The position (in milliseconds) within the media file
+        comment:str     A user-defined comment
+        """
+        methodName = 'createBookmark'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': mid , 'position': position , 
+            'comment': comment})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def deleteBookmark(self , mid):
+        """
+        since: 1.9.0
+
+        Deletes the bookmark for a given file
+
+        mid:str     The ID of the media file to delete the bookmark from.
+                    Other users' bookmarks are not affected
+        """
+        methodName = 'deleteBookmark'
+        viewName = '%s.view' % methodName
+
+        q = {'id': mid}
+
+        req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
