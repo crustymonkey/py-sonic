@@ -1859,7 +1859,7 @@ class Connection(object):
         bitrate streaming, see the bitRate parameter.
 
         mid:str     The ID of the media to stream
-        bitrate:int If specified, the server will attempt to limit the 
+        bitrate:str If specified, the server will attempt to limit the 
                     bitrate to this value, in kilobits per second. If 
                     this parameter is specified more than once, the 
                     server will create a variant playlist, suitable 
@@ -1870,16 +1870,22 @@ class Connection(object):
                     (since: 1.9.0) you may explicitly request a certain 
                     width (480) and height (360) like so: 
                     bitRate=1000@480x360
+
+        Returns the raw m3u8 file as a string
         """
         methodName = 'hls'
         viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'id': mid , 'bitrate': bitrate})
         req = self._getRequest(viewName , q)
-        # TODO: Fix this per docs
-        #res = self._doInfoReq(req)
-        #self._checkStatus(res)
-        #return res
+        try:
+            res = self._doBinReq(req)
+        except urllib2.HTTPError:
+            # Avatar is not set/does not exist, return None
+            return None
+        if isinstance(res , dict):
+            self._checkStatus(res)
+        return res.read()
 
     def refreshPodcasts(self):
         """
@@ -1927,7 +1933,7 @@ class Connection(object):
         methodName = 'deletePodcastChannel'
         viewName = '%s.view' % methodName
 
-        q = {'pid': pid}
+        q = {'id': pid}
 
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
@@ -1946,7 +1952,7 @@ class Connection(object):
         methodName = 'deletePodcastEpisode'
         viewName = '%s.view' % methodName
 
-        q = {'pid': pid}
+        q = {'id': pid}
 
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
@@ -1965,7 +1971,7 @@ class Connection(object):
         methodName = 'downloadPodcastEpisode'
         viewName = '%s.view' % methodName
 
-        q = {'pid': pid}
+        q = {'id': pid}
 
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
