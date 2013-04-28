@@ -22,7 +22,7 @@ from pprint import pprint
 from cStringIO import StringIO
 import json , urllib2, httplib, socket, ssl
 
-API_VERSION = '1.8.0'
+API_VERSION = '1.9.0'
 
 
 class HTTPSConnectionV3(httplib.HTTPSConnection):
@@ -1182,7 +1182,7 @@ class Connection(object):
 
         incEpisodes:bool    (since: 1.9.0) Whether to include Podcast 
                             episodes in the returned result.
-        id:str              (since: 1.9.0) If specified, only return 
+        pid:str             (since: 1.9.0) If specified, only return 
                             the Podcast channel with this ID.
 
         Returns a dict like the following:
@@ -1812,14 +1812,40 @@ class Connection(object):
     def getGenres(self):
         """
         since 1.9.0
+
+        Returns all genres
         """
-        pass
+        methodName = 'getGenres'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
     
     def getSongsByGenre(self , genre , count=10 , offset=0):
         """
         since 1.9.0
+
+        Returns songs in a given genre
+
+        genre:str       The genre, as returned by getGenres()
+        count:int       The maximum number of songs to return.  Max is 500
+                        default: 10
+        offset:int      The offset if you are paging.  default: 0
         """
-        pass
+        methodName = 'getGenres'
+        viewName = '%s.view' % methodName
+
+        q = {'genre': genre , 
+            'count': count , 
+            'offset': offset ,
+        }
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
 
     def hls (self , mid , bitrate=None):
         """
@@ -1845,55 +1871,177 @@ class Connection(object):
                     width (480) and height (360) like so: 
                     bitRate=1000@480x360
         """
-        pass
+        methodName = 'hls'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': mid , 'bitrate': bitrate})
+        req = self._getRequest(viewName , q)
+        # TODO: Fix this per docs
+        #res = self._doInfoReq(req)
+        #self._checkStatus(res)
+        #return res
 
     def refreshPodcasts(self):
         """
         since: 1.9.0
+
+        Tells the server to check for new Podcast episodes. Note: The user
+        must be authorized for Podcast administration
         """
-        pass
+        methodName = 'refreshPodcasts'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
 
     def createPodcastChannel(self , url):
         """
         since: 1.9.0
+
+        Adds a new Podcast channel.  Note: The user must be authorized
+        for Podcast administration
+
+        url:str     The URL of the Podcast to add
         """
-        pass
+        methodName = 'createPodcastChannel'
+        viewName = '%s.view' % methodName
+
+        q = {'url': url}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+    
+    def deletePodcastChannel(self , pid):
+        """
+        since: 1.9.0
+
+        Deletes a Podcast channel.  Note: The user must be authorized
+        for Podcast administration
+
+        pid:str         The ID of the Podcast channel to delete
+        """
+        methodName = 'deletePodcastChannel'
+        viewName = '%s.view' % methodName
+
+        q = {'pid': pid}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
 
     def deletePodcastEpisode(self , pid):
         """
         since: 1.9.0
+
+        Deletes a Podcast episode.  Note: The user must be authorized
+        for Podcast administration
+
+        pid:str         The ID of the Podcast episode to delete
         """
-        pass
+        methodName = 'deletePodcastEpisode'
+        viewName = '%s.view' % methodName
+
+        q = {'pid': pid}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
 
     def downloadPodcastEpisode(self , pid):
         """
         since: 1.9.0
+
+        Tells the server to start downloading a given Podcast episode. 
+        Note: The user must be authorized for Podcast administration
+
+        pid:str         The ID of the Podcast episode to download
         """
-        pass
+        methodName = 'downloadPodcastEpisode'
+        viewName = '%s.view' % methodName
+
+        q = {'pid': pid}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
 
     def getInternetRadioStations(self):
         """
         since: 1.9.0
+
+        Returns all internet radio stations
         """
-        pass
+        methodName = 'getInternetRadioStations'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
 
     def getBookmarks(self):
         """
         since: 1.9.0
-        """
-        pass
 
-    def createBookmark(self , bid , position , comment=None):
+        Returns all bookmarks for this user.  A bookmark is a position
+        within a media file
+        """
+        methodName = 'getBookmarks'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def createBookmark(self , mid , position , comment=None):
         """
         since: 1.9.0
-        """
-        pass
 
-    def deleteBookmark(self , bid):
+        Creates or updates a bookmark (position within a media file).
+        Bookmarks are personal and not visible to other users
+
+        mid:str         The ID of the media file to bookmark.  If a bookmark
+                        already exists for this file, it will be overwritten
+        position:int    The position (in milliseconds) within the media file
+        comment:str     A user-defined comment
+        """
+        methodName = 'createBookmark'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': mid , 'position': position , 
+            'comment': comment})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def deleteBookmark(self , mid):
         """
         since: 1.9.0
+
+        Deletes the bookmark for a given file
+
+        mid:str     The ID of the media file to delete the bookmark from.
+                    Other users' bookmarks are not affected
         """
-        pass
+        methodName = 'deleteBookmark'
+        viewName = '%s.view' % methodName
+
+        q = {'id': mid}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
 
     # Private internal methods
     def _getOpener(self , username , passwd):
