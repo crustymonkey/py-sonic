@@ -834,11 +834,47 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def createUser(self , username , password , ldapAuthenticated=False ,
-            adminRole=False , settingsRole=True , streamRole=True ,
-            jukeboxRole=False , downloadRole=False , uploadRole=False ,
-            playlistRole=False , coverArtRole=False , commentRole=False ,
-            podcastRole=False , shareRole=False):
+    def getUsers(self):
+        """
+        since 1.8.0
+
+        Gets a list of users
+
+        returns a dict like the following
+
+        {u'status': u'ok',
+         u'users': {u'user': [{u'adminRole': True,
+                   u'commentRole': True,
+                   u'coverArtRole': True,
+                   u'downloadRole': True,
+                   u'jukeboxRole': True,
+                   u'playlistRole': True,
+                   u'podcastRole': True,
+                   u'scrobblingEnabled': True,
+                   u'settingsRole': True,
+                   u'shareRole': True,
+                   u'streamRole': True,
+                   u'uploadRole': True,
+                   u'username': u'user1'},
+                   ...
+                   ...
+                   ]} ,
+         u'version': u'1.10.2',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getUsers'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def createUser(self , username , password , email , 
+            ldapAuthenticated=False , adminRole=False , settingsRole=True , 
+            streamRole=True , jukeboxRole=False , downloadRole=False , 
+            uploadRole=False , playlistRole=False , coverArtRole=False , 
+            commentRole=False , podcastRole=False , shareRole=False):
         """
         since: 1.1.0
 
@@ -847,6 +883,7 @@ class Connection(object):
 
         username:str        The username of the new user
         password:str        The password for the new user
+        email:str           The email of the new user
         <For info on the boolean roles, see http://subsonic.org for more info>
 
         Returns a dict like the following:
@@ -859,7 +896,7 @@ class Connection(object):
         viewName = '%s.view' % methodName
         hexPass = 'enc:%s' % self._hexEnc(password)
 
-        q = {'username': username , 'password': hexPass ,
+        q = {'username': username , 'password': hexPass , 'email': email ,
             'ldapAuthenticated': ldapAuthenticated , 'adminRole': adminRole ,
             'settingsRole': settingsRole , 'streamRole': streamRole ,
             'jukeboxRole': jukeboxRole , 'downloadRole': downloadRole ,
@@ -867,6 +904,44 @@ class Connection(object):
             'coverArtRole': coverArtRole , 'commentRole': commentRole ,
             'podcastRole': podcastRole , 'shareRole': shareRole}
 
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def updateUser(self , username , password=None , email=None ,
+            ldapAuthenticated=False , adminRole=False , settingsRole=True , 
+            streamRole=True , jukeboxRole=False , downloadRole=False , 
+            uploadRole=False , playlistRole=False , coverArtRole=False , 
+            commentRole=False , podcastRole=False , shareRole=False):
+        """
+        since 1.10.1
+
+        Modifies an existing Subsonic user.
+
+        username:str        The username of the user to update.
+        
+        All other args are the same as create user and you can update
+        whatever item you wish to update for the given username.
+
+        Returns a dict like the following:
+
+        {u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'updateUser'
+        viewName = '%s.view' % methodName
+        if password is not None:
+            password = 'enc:%s' % self._hexEnc(password)
+        q = self._getQueryDict({'username': username , 'password': password ,
+            'email': email , 'ldapAuthenticated': ldapAuthenticated , 
+            'adminRole': adminRole ,
+            'settingsRole': settingsRole , 'streamRole': streamRole ,
+            'jukeboxRole': jukeboxRole , 'downloadRole': downloadRole ,
+            'uploadRole': uploadRole , 'playlistRole': playlistRole ,
+            'coverArtRole': coverArtRole , 'commentRole': commentRole ,
+            'podcastRole': podcastRole , 'shareRole': shareRole})
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
