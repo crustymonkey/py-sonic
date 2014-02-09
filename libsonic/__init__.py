@@ -29,4 +29,4 @@ print conn.ping()
 
 from connection import *
 
-__version__ = '0.2.3'
+__version__ = '0.3.0'
