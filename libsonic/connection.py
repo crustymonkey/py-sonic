@@ -22,7 +22,7 @@ from pprint import pprint
 from cStringIO import StringIO
 import json , urllib2, httplib, socket, ssl
 
-API_VERSION = '1.9.0'
+API_VERSION = '1.10.2'
 
 
 class HTTPSConnectionV3(httplib.HTTPSConnection):
@@ -909,7 +909,7 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def updateUser(self , username , password=None , email=None ,
+    def updateUser(self , username ,  password=None , email=None ,
             ldapAuthenticated=False , adminRole=False , settingsRole=True , 
             streamRole=True , jukeboxRole=False , downloadRole=False , 
             uploadRole=False , playlistRole=False , coverArtRole=False , 
@@ -1037,6 +1037,8 @@ class Connection(object):
                         newest, highest, frequent, recent, 
                         (since 1.8.0 -> )starred, alphabeticalByName, 
                         alphabeticalByArtist
+                        Since 1.10.1 you can use byYear and byGenre to 
+                        list albums in a given year range or genre.
         size:int        The number of albums to return. Max 500
         offset:int      The list offset. Use for paging. Max 5000
 
@@ -1079,6 +1081,8 @@ class Connection(object):
                         newest, highest, frequent, recent, 
                         (since 1.8.0 -> )starred, alphabeticalByName, 
                         alphabeticalByArtist
+                        Since 1.10.1 you can use byYear and byGenre to 
+                        list albums in a given year range or genre.
         size:int        The number of albums to return. Max 500
         offset:int      The list offset. Use for paging. Max 5000
 
