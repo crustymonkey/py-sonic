@@ -22,7 +22,7 @@ from pprint import pprint
 from cStringIO import StringIO
 import json , urllib2, httplib, socket, ssl
 
-API_VERSION = '1.9.0'
+API_VERSION = '1.10.2'
 
 
 class HTTPSConnectionV3(httplib.HTTPSConnection):
@@ -834,11 +834,11 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def createUser(self , username , password , ldapAuthenticated=False ,
-            adminRole=False , settingsRole=True , streamRole=True ,
-            jukeboxRole=False , downloadRole=False , uploadRole=False ,
-            playlistRole=False , coverArtRole=False , commentRole=False ,
-            podcastRole=False , shareRole=False):
+    def createUser(self , username , password , email , 
+            ldapAuthenticated=False , adminRole=False , settingsRole=True , 
+            streamRole=True , jukeboxRole=False , downloadRole=False , 
+            uploadRole=False , playlistRole=False , coverArtRole=False , 
+            commentRole=False , podcastRole=False , shareRole=False):
         """
         since: 1.1.0
 
@@ -847,6 +847,7 @@ class Connection(object):
 
         username:str        The username of the new user
         password:str        The password for the new user
+        email:str           The email of the new user
         <For info on the boolean roles, see http://subsonic.org for more info>
 
         Returns a dict like the following:
@@ -859,7 +860,7 @@ class Connection(object):
         viewName = '%s.view' % methodName
         hexPass = 'enc:%s' % self._hexEnc(password)
 
-        q = {'username': username , 'password': hexPass ,
+        q = {'username': username , 'password': hexPass , 'email': email ,
             'ldapAuthenticated': ldapAuthenticated , 'adminRole': adminRole ,
             'settingsRole': settingsRole , 'streamRole': streamRole ,
             'jukeboxRole': jukeboxRole , 'downloadRole': downloadRole ,
@@ -867,6 +868,44 @@ class Connection(object):
             'coverArtRole': coverArtRole , 'commentRole': commentRole ,
             'podcastRole': podcastRole , 'shareRole': shareRole}
 
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def updateUser(self , username ,  password=None , email=None ,
+            ldapAuthenticated=False , adminRole=False , settingsRole=True , 
+            streamRole=True , jukeboxRole=False , downloadRole=False , 
+            uploadRole=False , playlistRole=False , coverArtRole=False , 
+            commentRole=False , podcastRole=False , shareRole=False):
+        """
+        since 1.10.1
+
+        Modifies an existing Subsonic user.
+
+        username:str        The username of the user to update.
+        
+        All other args are the same as create user and you can update
+        whatever item you wish to update for the given username.
+
+        Returns a dict like the following:
+
+        {u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'createUser'
+        viewName = '%s.view' % methodName
+        if password is not None:
+            password = 'enc:%s' % self._hexEnc(password)
+        q = self._getQueryDict({'username': username , 'password': password ,
+            'email': email , 'ldapAuthenticated': ldapAuthenticated , 
+            'adminRole': adminRole ,
+            'settingsRole': settingsRole , 'streamRole': streamRole ,
+            'jukeboxRole': jukeboxRole , 'downloadRole': downloadRole ,
+            'uploadRole': uploadRole , 'playlistRole': playlistRole ,
+            'coverArtRole': coverArtRole , 'commentRole': commentRole ,
+            'podcastRole': podcastRole , 'shareRole': shareRole})
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -962,6 +1001,8 @@ class Connection(object):
                         newest, highest, frequent, recent, 
                         (since 1.8.0 -> )starred, alphabeticalByName, 
                         alphabeticalByArtist
+                        Since 1.10.1 you can use byYear and byGenre to 
+                        list albums in a given year range or genre.
         size:int        The number of albums to return. Max 500
         offset:int      The list offset. Use for paging. Max 5000
 
@@ -1004,6 +1045,8 @@ class Connection(object):
                         newest, highest, frequent, recent, 
                         (since 1.8.0 -> )starred, alphabeticalByName, 
                         alphabeticalByArtist
+                        Since 1.10.1 you can use byYear and byGenre to 
+                        list albums in a given year range or genre.
         size:int        The number of albums to return. Max 500
         offset:int      The list offset. Use for paging. Max 5000
 
