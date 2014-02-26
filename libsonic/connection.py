@@ -21,6 +21,8 @@ from .errors import *
 from io import StringIO
 import json , urllib.request, urllib.error, urllib.parse
 
+API_VERSION = '1.10.2'
+
 class PysHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
     """
     This class is used to override the default behavior of the 
