@@ -13,8 +13,20 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
+
+For information on method calls, see 'pydoc libsonic.connection'
+
+----------
+Basic example:
+----------
+
+import libsonic
+
+conn = libsonic.Connection('http://localhost' , 'admin' , 'password')
+print conn.ping()
+
 """
 
 from .connection import *
 
-__version__ = '0.1.10'
+__version__ = '0.3.0'

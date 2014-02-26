@@ -21,8 +21,6 @@ from .errors import *
 from io import StringIO
 import json , urllib.request, urllib.error, urllib.parse
 
-API_VERSION = '1.7.0'
-
 class PysHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
     """
     This class is used to override the default behavior of the 
@@ -426,11 +424,93 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getPlaylists(self):
+    def search3(self , query , artistCount=20 , artistOffset=0 , albumCount=20 ,
+            albumOffset=0 , songCount=20 , songOffset=0):
+        """
+        since: 1.8.0
+
+        Works the same way as search2, but uses ID3 tags for
+        organization
+
+        query:str           The search query
+        artistCount:int     Max number of artists to return [default: 20]
+        artistOffset:int    Search offset for artists (for paging) [default: 0]
+        albumCount:int      Max number of albums to return [default: 20]
+        albumOffset:int     Search offset for albums (for paging) [default: 0]
+        songCount:int       Max number of songs to return [default: 20]
+        songOffset:int      Search offset for songs (for paging) [default: 0]
+
+        Returns a dict like the following (search for "Tune Yards":
+            {u'searchResult3': {u'album': [{u'artist': u'Tune-Yards',
+                                u'artistId': 1,
+                                u'coverArt': u'al-7',
+                                u'created': u'2012-01-30T12:35:33',
+                                u'duration': 3229,
+                                u'id': 7,
+                                u'name': u'Bird-Brains',
+                                u'songCount': 13},
+                               {u'artist': u'Tune-Yards',
+                                u'artistId': 1,
+                                u'coverArt': u'al-8',
+                                u'created': u'2011-03-22T15:08:00',
+                                u'duration': 2531,
+                                u'id': 8,
+                                u'name': u'W H O K I L L',
+                                u'songCount': 10}],
+                    u'artist': {u'albumCount': 2,
+                                u'coverArt': u'ar-1',
+                                u'id': 1,
+                                u'name': u'Tune-Yards'},
+                    u'song': [{u'album': u'Bird-Brains',
+                               u'albumId': 7,
+                               u'artist': u'Tune-Yards',
+                               u'artistId': 1,
+                               u'bitRate': 160,
+                               u'contentType': u'audio/mpeg',
+                               u'coverArt': 105,
+                               u'created': u'2012-01-30T12:35:33',
+                               u'duration': 328,
+                               u'genre': u'Lo-Fi',
+                               u'id': 107,
+                               u'isDir': False,
+                               u'isVideo': False,
+                               u'parent': 105,
+                               u'path': u'Tune Yards/Bird-Brains/10-tune-yards-fiya.mp3',
+                               u'size': 6588498,
+                               u'suffix': u'mp3',
+                               u'title': u'Fiya',
+                               u'track': 10,
+                               u'type': u'music',
+                               u'year': 2009}]},
+
+             u'status': u'ok',
+             u'version': u'1.5.0',
+             u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'search3'
+        viewName = '%s.view' % methodName
+
+        q = {'query': query , 'artistCount': artistCount , 
+            'artistOffset': artistOffset , 'albumCount': albumCount ,
+            'albumOffset': albumOffset , 'songCount': songCount ,
+            'songOffset': songOffset}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getPlaylists(self , username=None):
         """
         since: 1.0.0
 
         Returns the ID and name of all saved playlists
+        The "username" option was added in 1.8.0.
+
+        username:str        If specified, return playlists for this user
+                            rather than for the authenticated user.  The
+                            authenticated user must have admin role
+                            if this parameter is used
 
         Returns a dict like the following:
 
@@ -445,7 +525,9 @@ class Connection(object):
         methodName = 'getPlaylists'
         viewName = '%s.view' % methodName
 
-        req = self._getRequest(viewName)
+        q = self._getQueryDict({'username': username})
+
+        req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -564,7 +646,8 @@ class Connection(object):
             self._checkStatus(res)
         return res
 
-    def stream(self , sid , maxBitRate=0):
+    def stream(self , sid , maxBitRate=0 , tformat=None , timeOffset=None ,
+            size=None , estimateContentLength=False):
         """
         since: 1.0.0
 
@@ -576,6 +659,19 @@ class Connection(object):
                         kilobits per second. If set to zero (default), no limit 
                         is imposed. Legal values are: 0, 32, 40, 48, 56, 64, 
                         80, 96, 112, 128, 160, 192, 224, 256 and 320.
+        tformat:str     (since: 1.6.0) Specifies the target format
+                        (e.g. "mp3" or "flv") in case there are multiple
+                        applicable transcodings (since: 1.9.0) You can use
+                        the special value "raw" to disable transcoding
+        timeOffset:int  (since: 1.6.0) Only applicable to video 
+                        streaming.  Start the stream at the given
+                        offset (in seconds) into the video
+        size:str        (since: 1.6.0) The requested video size in
+                        WxH, for instance 640x480
+        estimateContentLength:bool  (since: 1.8.0) If set to True,
+                                    the HTTP Content-Length header
+                                    will be set to an estimated
+                                    value for trancoded media
 
         Returns the file-like object for reading or raises an exception 
         on error
@@ -583,7 +679,9 @@ class Connection(object):
         methodName = 'stream'
         viewName = '%s.view' % methodName
         
-        q = {'id': sid , 'maxBitRate': maxBitRate}
+        q = self._getQueryDict({'id': sid , 'maxBitRate': maxBitRate ,
+            'format': tformat , 'timeOffset': timeOffset , 'size': size ,
+            'estimateContentLength': estimateContentLength})
 
         req = self._getRequest(viewName , q)
         res = self._doBinReq(req)
@@ -710,11 +808,47 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def createUser(self , username , password , ldapAuthenticated=False ,
-            adminRole=False , settingsRole=True , streamRole=True ,
-            jukeboxRole=False , downloadRole=False , uploadRole=False ,
-            playlistRole=False , coverArtRole=False , commentRole=False ,
-            podcastRole=False):
+    def getUsers(self):
+        """
+        since 1.8.0
+
+        Gets a list of users
+
+        returns a dict like the following
+
+        {u'status': u'ok',
+         u'users': {u'user': [{u'adminRole': True,
+                   u'commentRole': True,
+                   u'coverArtRole': True,
+                   u'downloadRole': True,
+                   u'jukeboxRole': True,
+                   u'playlistRole': True,
+                   u'podcastRole': True,
+                   u'scrobblingEnabled': True,
+                   u'settingsRole': True,
+                   u'shareRole': True,
+                   u'streamRole': True,
+                   u'uploadRole': True,
+                   u'username': u'user1'},
+                   ...
+                   ...
+                   ]} ,
+         u'version': u'1.10.2',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getUsers'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def createUser(self , username , password , email , 
+            ldapAuthenticated=False , adminRole=False , settingsRole=True , 
+            streamRole=True , jukeboxRole=False , downloadRole=False , 
+            uploadRole=False , playlistRole=False , coverArtRole=False , 
+            commentRole=False , podcastRole=False , shareRole=False):
         """
         since: 1.1.0
 
@@ -723,6 +857,7 @@ class Connection(object):
 
         username:str        The username of the new user
         password:str        The password for the new user
+        email:str           The email of the new user
         <For info on the boolean roles, see http://subsonic.org for more info>
 
         Returns a dict like the following:
@@ -735,14 +870,52 @@ class Connection(object):
         viewName = '%s.view' % methodName
         hexPass = 'enc:%s' % self._hexEnc(password)
 
-        q = {'username': username , 'password': hexPass ,
+        q = {'username': username , 'password': hexPass , 'email': email ,
             'ldapAuthenticated': ldapAuthenticated , 'adminRole': adminRole ,
             'settingsRole': settingsRole , 'streamRole': streamRole ,
             'jukeboxRole': jukeboxRole , 'downloadRole': downloadRole ,
             'uploadRole': uploadRole , 'playlistRole': playlistRole ,
             'coverArtRole': coverArtRole , 'commentRole': commentRole ,
-            'podcastRole': podcastRole}
+            'podcastRole': podcastRole , 'shareRole': shareRole}
 
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def updateUser(self , username ,  password=None , email=None ,
+            ldapAuthenticated=False , adminRole=False , settingsRole=True , 
+            streamRole=True , jukeboxRole=False , downloadRole=False , 
+            uploadRole=False , playlistRole=False , coverArtRole=False , 
+            commentRole=False , podcastRole=False , shareRole=False):
+        """
+        since 1.10.1
+
+        Modifies an existing Subsonic user.
+
+        username:str        The username of the user to update.
+        
+        All other args are the same as create user and you can update
+        whatever item you wish to update for the given username.
+
+        Returns a dict like the following:
+
+        {u'status': u'ok',
+         u'version': u'1.5.0',
+         u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'updateUser'
+        viewName = '%s.view' % methodName
+        if password is not None:
+            password = 'enc:%s' % self._hexEnc(password)
+        q = self._getQueryDict({'username': username , 'password': password ,
+            'email': email , 'ldapAuthenticated': ldapAuthenticated , 
+            'adminRole': adminRole ,
+            'settingsRole': settingsRole , 'streamRole': streamRole ,
+            'jukeboxRole': jukeboxRole , 'downloadRole': downloadRole ,
+            'uploadRole': uploadRole , 'playlistRole': playlistRole ,
+            'coverArtRole': coverArtRole , 'commentRole': commentRole ,
+            'podcastRole': podcastRole , 'shareRole': shareRole})
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -835,7 +1008,11 @@ class Connection(object):
         web interface
 
         ltype:str       The list type. Must be one of the following: random, 
-                        newest, highest, frequent, recent
+                        newest, highest, frequent, recent, 
+                        (since 1.8.0 -> )starred, alphabeticalByName, 
+                        alphabeticalByArtist
+                        Since 1.10.1 you can use byYear and byGenre to 
+                        list albums in a given year range or genre.
         size:int        The number of albums to return. Max 500
         offset:int      The list offset. Use for paging. Max 5000
 
@@ -857,6 +1034,54 @@ class Connection(object):
          u'xmlns': u'http://subsonic.org/restapi'}
         """
         methodName = 'getAlbumList'
+        viewName = '%s.view' % methodName
+
+        q = {'type': ltype , 'size': size , 'offset': offset}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getAlbumList2(self , ltype , size=10 , offset=0):
+        """
+        since 1.8.0
+
+        Returns a list of random, newest, highest rated etc. albums. 
+        This is similar to getAlbumList, but uses ID3 tags for
+        organization
+
+        ltype:str       The list type. Must be one of the following: random, 
+                        newest, highest, frequent, recent, 
+                        (since 1.8.0 -> )starred, alphabeticalByName, 
+                        alphabeticalByArtist
+                        Since 1.10.1 you can use byYear and byGenre to 
+                        list albums in a given year range or genre.
+        size:int        The number of albums to return. Max 500
+        offset:int      The list offset. Use for paging. Max 5000
+
+        Returns a dict like the following:
+           {u'albumList2': {u'album': [{u'artist': u'Massive Attack',
+                             u'artistId': 0,
+                             u'coverArt': u'al-0',
+                             u'created': u'2009-08-28T10:00:44',
+                             u'duration': 3762,
+                             u'id': 0,
+                             u'name': u'100th Window',
+                             u'songCount': 9},
+                            {u'artist': u'Massive Attack',
+                             u'artistId': 0,
+                             u'coverArt': u'al-5',
+                             u'created': u'2003-11-03T22:00:00',
+                             u'duration': 2715,
+                             u'id': 5,
+                             u'name': u'Blue Lines',
+                             u'songCount': 9}]},
+            u'status': u'ok',
+            u'version': u'1.8.0',
+            u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getAlbumList2'
         viewName = '%s.view' % methodName
 
         q = {'type': ltype , 'size': size , 'offset': offset}
@@ -1001,12 +1226,17 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getPodcasts(self):
+    def getPodcasts(self , incEpisodes=True , pid=None):
         """
         since: 1.6.0
 
         Returns all podcast channels the server subscribes to and their 
         episodes.
+
+        incEpisodes:bool    (since: 1.9.0) Whether to include Podcast 
+                            episodes in the returned result.
+        pid:str             (since: 1.9.0) If specified, only return 
+                            the Podcast channel with this ID.
 
         Returns a dict like the following:
         {u'status': u'ok',
@@ -1017,7 +1247,7 @@ class Connection(object):
                                           u'artist': u'BBC Radio 5 live',
                                           u'bitRate': 64,
                                           u'contentType': u'audio/mpeg',
-                                          u'coverArt': u'2f6f70742f737562736f6e69632f706f6463617374732f4472204b61726c20616e6420746865204e616b656420536369656e746973742f64726b61726c5f32303131303831382d30343036612e6d7033',
+                                          u'coverArt': u'2f6f7074',
                                           u'description': u'Dr Karl answers all your science related questions.',
                                           u'duration': 2902,
                                           u'genre': u'Podcast',
@@ -1054,7 +1284,9 @@ class Connection(object):
         methodName = 'getPodcasts'
         viewName = '%s.view' % methodName
 
-        req = self._getRequest(viewName)
+        q = self._getQueryDict({'includeEpisodes': incEpisodes , 
+            'id': pid})
+        req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -1195,6 +1427,676 @@ class Connection(object):
 
         q = self._getQueryDict({'id': id , 'rating': rating})
         
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getArtists(self):
+        """
+        since 1.8.0
+
+        Similar to getIndexes(), but this method uses the ID3 tags to
+        determine the artist
+
+        Returns a dict like the following:
+            {u'artists': {u'index': [{u'artist': {u'albumCount': 7,
+                                      u'coverArt': u'ar-0',
+                                      u'id': 0,
+                                      u'name': u'Massive Attack'},
+                          u'name': u'M'},
+                         {u'artist': {u'albumCount': 2,
+                                      u'coverArt': u'ar-1',
+                                      u'id': 1,
+                                      u'name': u'Tune-Yards'},
+                          u'name': u'T'}]},
+             u'status': u'ok',
+             u'version': u'1.8.0',
+             u'xmlns': u'http://subsonic.org/restapi'}    
+        """
+        methodName = 'getArtists'
+        viewName = '%s.view' % methodName
+        
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getArtist(self , id):
+        """
+        since 1.8.0
+
+        Returns the info (albums) for an artist.  This method uses 
+        the ID3 tags for organization
+
+        id:str      The artist ID
+
+        Returns a dict like the following:
+            
+           {u'artist': {u'album': [{u'artist': u'Tune-Yards',
+                         u'artistId': 1,
+                         u'coverArt': u'al-7',
+                         u'created': u'2012-01-30T12:35:33',
+                         u'duration': 3229,
+                         u'id': 7,
+                         u'name': u'Bird-Brains',
+                         u'songCount': 13},
+                        {u'artist': u'Tune-Yards',
+                         u'artistId': 1,
+                         u'coverArt': u'al-8',
+                         u'created': u'2011-03-22T15:08:00',
+                         u'duration': 2531,
+                         u'id': 8,
+                         u'name': u'W H O K I L L',
+                         u'songCount': 10}],
+             u'albumCount': 2,
+             u'coverArt': u'ar-1',
+             u'id': 1,
+             u'name': u'Tune-Yards'},
+            u'status': u'ok',
+            u'version': u'1.8.0',
+            u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getArtist'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': id})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getAlbum(self , id):
+        """
+        since 1.8.0
+
+        Returns the info and songs for an album.  This method uses
+        the ID3 tags for organization
+
+        id:str      The album ID
+
+        Returns a dict like the following:
+            
+           {u'album': {u'artist': u'Massive Attack',
+            u'artistId': 0,
+            u'coverArt': u'al-0',
+            u'created': u'2009-08-28T10:00:44',
+            u'duration': 3762,
+            u'id': 0,
+            u'name': u'100th Window',
+            u'song': [{u'album': u'100th Window',
+                       u'albumId': 0,
+                       u'artist': u'Massive Attack',
+                       u'artistId': 0,
+                       u'bitRate': 192,
+                       u'contentType': u'audio/mpeg',
+                       u'coverArt': 2,
+                       u'created': u'2009-08-28T10:00:57',
+                       u'duration': 341,
+                       u'genre': u'Rock',
+                       u'id': 14,
+                       u'isDir': False,
+                       u'isVideo': False,
+                       u'parent': 2,
+                       u'path': u'Massive Attack/100th Window/01 - Future Proof.mp3',
+                       u'size': 8184445,
+                       u'suffix': u'mp3',
+                       u'title': u'Future Proof',
+                       u'track': 1,
+                       u'type': u'music',
+                       u'year': 2003}],
+              u'songCount': 9},
+            u'status': u'ok',
+            u'version': u'1.8.0',
+            u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getAlbum'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': id})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getSong(self , id):
+        """
+        since 1.8.0
+
+        Returns the info for a song.  This method uses the ID3 
+        tags for organization
+
+        id:str      The song ID
+
+        Returns a dict like the following:
+            {u'song': {u'album': u'W H O K I L L',
+               u'albumId': 8,
+               u'artist': u'Tune-Yards',
+               u'artistId': 1,
+               u'bitRate': 320,
+               u'contentType': u'audio/mpeg',
+               u'coverArt': 106,
+               u'created': u'2011-03-22T15:08:00',
+               u'discNumber': 1,
+               u'duration': 192,
+               u'genre': u'Indie Rock',
+               u'id': 120,
+               u'isDir': False,
+               u'isVideo': False,
+               u'parent': 106,
+               u'path': u'Tune Yards/Who Kill/10 Killa.mp3',
+               u'size': 7692656,
+               u'suffix': u'mp3',
+               u'title': u'Killa',
+               u'track': 10,
+               u'type': u'music',
+               u'year': 2011},
+             u'status': u'ok',
+             u'version': u'1.8.0',
+             u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getSong'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': id})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getVideos(self):
+        """
+        since 1.8.0
+
+        Returns all video files
+
+        Returns a dict like the following:
+            {u'status': u'ok',
+             u'version': u'1.8.0',
+             u'videos': {u'video': {u'bitRate': 384,
+                        u'contentType': u'video/x-matroska',
+                        u'created': u'2012-08-26T13:36:44',
+                        u'duration': 1301,
+                        u'id': 130,
+                        u'isDir': False,
+                        u'isVideo': True,
+                        u'path': u'South Park - 16x07 - Cartman Finds Love.mkv',
+                        u'size': 287309613,
+                        u'suffix': u'mkv',
+                        u'title': u'South Park - 16x07 - Cartman Finds Love',
+                        u'transcodedContentType': u'video/x-flv',
+                        u'transcodedSuffix': u'flv'}},
+             u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getVideos'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getStarred(self):
+        """
+        since 1.8.0
+
+        Returns starred songs, albums and artists
+
+        Returns a dict like the following:
+            {u'starred': {u'album': {u'album': u'Bird-Brains',
+                         u'artist': u'Tune-Yards',
+                         u'coverArt': 105,
+                         u'created': u'2012-01-30T13:16:58',
+                         u'id': 105,
+                         u'isDir': True,
+                         u'parent': 104,
+                         u'starred': u'2012-08-26T13:18:34',
+                         u'title': u'Bird-Brains'},
+              u'song': [{u'album': u'Mezzanine',
+                         u'albumId': 4,
+                         u'artist': u'Massive Attack',
+                         u'artistId': 0,
+                         u'bitRate': 256,
+                         u'contentType': u'audio/mpeg',
+                         u'coverArt': 6,
+                         u'created': u'2009-06-15T07:48:28',
+                         u'duration': 298,
+                         u'genre': u'Dub',
+                         u'id': 72,
+                         u'isDir': False,
+                         u'isVideo': False,
+                         u'parent': 6,
+                         u'path': u'Massive Attack/Mezzanine/Massive Attack_02_mezzanine.mp3',
+                         u'size': 9564160,
+                         u'starred': u'2012-08-26T13:19:26',
+                         u'suffix': u'mp3',
+                         u'title': u'Risingson',
+                         u'track': 2,
+                         u'type': u'music'},
+                        {u'album': u'Mezzanine',
+                         u'albumId': 4,
+                         u'artist': u'Massive Attack',
+                         u'artistId': 0,
+                         u'bitRate': 256,
+                         u'contentType': u'audio/mpeg',
+                         u'coverArt': 6,
+                         u'created': u'2009-06-15T07:48:25',
+                         u'duration': 380,
+                         u'genre': u'Dub',
+                         u'id': 71,
+                         u'isDir': False,
+                         u'isVideo': False,
+                         u'parent': 6,
+                         u'path': u'Massive Attack/Mezzanine/Massive Attack_01_mezzanine.mp3',
+                         u'size': 12179456,
+                         u'starred': u'2012-08-26T13:19:03',
+                         u'suffix': u'mp3',
+                         u'title': u'Angel',
+                         u'track': 1,
+                         u'type': u'music'}]},
+             u'status': u'ok',
+             u'version': u'1.8.0',
+             u'xmlns': u'http://subsonic.org/restapi'}
+        """
+        methodName = 'getStarred'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getStarred2(self):
+        """
+        since 1.8.0
+
+        Returns starred songs, albums and artists like getStarred(),
+        but this uses ID3 tags for organization
+
+        Returns a dict like the following:
+            
+            **See the output from getStarred()**
+        """
+        methodName = 'getStarred2'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def updatePlaylist(self , lid , name=None , comment=None , songIdsToAdd=[] ,
+            songIndexesToRemove=[]):
+        """
+        since 1.8.0
+
+        Updates a playlist.  Only the owner of a playlist is allowed to
+        update it.
+
+        lid:str                 The playlist id
+        name:str                The human readable name of the playlist
+        comment:str             The playlist comment
+        songIdsToAdd:list       A list of song IDs to add to the playlist
+        songIndexesToRemove:list    Remove the songs at the 
+                                    0 BASED INDEXED POSITIONS in the
+                                    playlist, NOT the song ids.  Note that 
+                                    this is always a list.
+        
+        Returns a normal status response dict
+        """
+        methodName = 'updatePlaylist'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'playlistId': lid , 'name': name ,
+            'comment': comment})
+        if not isinstance(songIdsToAdd , list) or isinstance(songIdsToAdd ,
+                tuple):
+            songIdsToAdd = [songIdsToAdd]
+        if not isinstance(songIndexesToRemove , list) or isinstance(
+                songIndexesToRemove , tuple):
+            songIndexesToRemove = [songIndexesToRemove]
+        listMap = {'songIdToAdd': songIdsToAdd ,
+            'songIndexToRemove': songIndexesToRemove}
+        req = self._getRequestWithLists(viewName , listMap , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getAvatar(self , username):
+        """
+        since 1.8.0
+
+        Returns the avatar for a user or None if the avatar does not exist
+
+        username:str    The user to retrieve the avatar for
+
+        Returns the file-like object for reading or raises an exception 
+        on error
+        """
+        methodName = 'getAvatar'
+        viewName = '%s.view' % methodName
+        
+        q = {'username': username}
+
+        req = self._getRequest(viewName , q)
+        try:
+            res = self._doBinReq(req)
+        except urllib2.HTTPError:
+            # Avatar is not set/does not exist, return None
+            return None
+        if isinstance(res , dict):
+            self._checkStatus(res)
+        return res
+
+    def star(self , sids=[] , albumIds=[] , artistIds=[]):
+        """
+        since 1.8.0
+
+        Attaches a star to songs, albums or artists
+
+        sids:list       A list of song IDs to star
+        albumIds:list   A list of album IDs to star.  Use this rather than
+                        "sids" if the client access the media collection
+                        according to ID3 tags rather than file
+                        structure
+        artistIds:list  The ID of an artist to star.  Use this rather
+                        than sids if the client access the media
+                        collection according to ID3 tags rather
+                        than file structure
+
+        Returns a normal status response dict
+        """
+        methodName = 'star'
+        viewName = '%s.view' % methodName
+
+        if not isinstance(sids , list) or isinstance(sids , tuple):
+            sids = [sids]
+        if not isinstance(albumIds , list) or isinstance(albumIds , tuple):
+            albumIds = [albumIds]
+        if not isinstance(artistIds , list) or isinstance(artistIds , tuple):
+            artistIds = [artistIds]
+        listMap = {'id': sids ,
+            'albumId': albumIds ,
+            'artistId': artistIds}
+        req = self._getRequestWithLists(viewName , listMap)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def unstar(self , sids=[] , albumIds=[] , artistIds=[]):
+        """
+        since 1.8.0
+
+        Removes a star to songs, albums or artists.  Basically, the
+        same as star in reverse
+
+        sids:list       A list of song IDs to star
+        albumIds:list   A list of album IDs to star.  Use this rather than
+                        "sids" if the client access the media collection
+                        according to ID3 tags rather than file
+                        structure
+        artistIds:list  The ID of an artist to star.  Use this rather
+                        than sids if the client access the media
+                        collection according to ID3 tags rather
+                        than file structure
+
+        Returns a normal status response dict
+        """
+        methodName = 'unstar'
+        viewName = '%s.view' % methodName
+
+        if not isinstance(sids , list) or isinstance(sids , tuple):
+            sids = [sids]
+        if not isinstance(albumIds , list) or isinstance(albumIds , tuple):
+            albumIds = [albumIds]
+        if not isinstance(artistIds , list) or isinstance(artistIds , tuple):
+            artistIds = [artistIds]
+        listMap = {'id': sids ,
+            'albumId': albumIds ,
+            'artistId': artistIds}
+        req = self._getRequestWithLists(viewName , listMap)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getGenres(self):
+        """
+        since 1.9.0
+
+        Returns all genres
+        """
+        methodName = 'getGenres'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+    
+    def getSongsByGenre(self , genre , count=10 , offset=0):
+        """
+        since 1.9.0
+
+        Returns songs in a given genre
+
+        genre:str       The genre, as returned by getGenres()
+        count:int       The maximum number of songs to return.  Max is 500
+                        default: 10
+        offset:int      The offset if you are paging.  default: 0
+        """
+        methodName = 'getGenres'
+        viewName = '%s.view' % methodName
+
+        q = {'genre': genre , 
+            'count': count , 
+            'offset': offset ,
+        }
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def hls (self , mid , bitrate=None):
+        """
+        since 1.8.0
+
+        Creates an HTTP live streaming playlist for streaming video or
+        audio HLS is a streaming protocol implemented by Apple and 
+        works by breaking the overall stream into a sequence of small 
+        HTTP-based file downloads. It's supported by iOS and newer 
+        versions of Android. This method also supports adaptive 
+        bitrate streaming, see the bitRate parameter.
+
+        mid:str     The ID of the media to stream
+        bitrate:str If specified, the server will attempt to limit the 
+                    bitrate to this value, in kilobits per second. If 
+                    this parameter is specified more than once, the 
+                    server will create a variant playlist, suitable 
+                    for adaptive bitrate streaming. The playlist will 
+                    support streaming at all the specified bitrates. 
+                    The server will automatically choose video dimensions 
+                    that are suitable for the given bitrates. 
+                    (since: 1.9.0) you may explicitly request a certain 
+                    width (480) and height (360) like so: 
+                    bitRate=1000@480x360
+
+        Returns the raw m3u8 file as a string
+        """
+        methodName = 'hls'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': mid , 'bitrate': bitrate})
+        req = self._getRequest(viewName , q)
+        try:
+            res = self._doBinReq(req)
+        except urllib2.HTTPError:
+            # Avatar is not set/does not exist, return None
+            return None
+        if isinstance(res , dict):
+            self._checkStatus(res)
+        return res.read()
+
+    def refreshPodcasts(self):
+        """
+        since: 1.9.0
+
+        Tells the server to check for new Podcast episodes. Note: The user
+        must be authorized for Podcast administration
+        """
+        methodName = 'refreshPodcasts'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def createPodcastChannel(self , url):
+        """
+        since: 1.9.0
+
+        Adds a new Podcast channel.  Note: The user must be authorized
+        for Podcast administration
+
+        url:str     The URL of the Podcast to add
+        """
+        methodName = 'createPodcastChannel'
+        viewName = '%s.view' % methodName
+
+        q = {'url': url}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+    
+    def deletePodcastChannel(self , pid):
+        """
+        since: 1.9.0
+
+        Deletes a Podcast channel.  Note: The user must be authorized
+        for Podcast administration
+
+        pid:str         The ID of the Podcast channel to delete
+        """
+        methodName = 'deletePodcastChannel'
+        viewName = '%s.view' % methodName
+
+        q = {'id': pid}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def deletePodcastEpisode(self , pid):
+        """
+        since: 1.9.0
+
+        Deletes a Podcast episode.  Note: The user must be authorized
+        for Podcast administration
+
+        pid:str         The ID of the Podcast episode to delete
+        """
+        methodName = 'deletePodcastEpisode'
+        viewName = '%s.view' % methodName
+
+        q = {'id': pid}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def downloadPodcastEpisode(self , pid):
+        """
+        since: 1.9.0
+
+        Tells the server to start downloading a given Podcast episode. 
+        Note: The user must be authorized for Podcast administration
+
+        pid:str         The ID of the Podcast episode to download
+        """
+        methodName = 'downloadPodcastEpisode'
+        viewName = '%s.view' % methodName
+
+        q = {'id': pid}
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getInternetRadioStations(self):
+        """
+        since: 1.9.0
+
+        Returns all internet radio stations
+        """
+        methodName = 'getInternetRadioStations'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getBookmarks(self):
+        """
+        since: 1.9.0
+
+        Returns all bookmarks for this user.  A bookmark is a position
+        within a media file
+        """
+        methodName = 'getBookmarks'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def createBookmark(self , mid , position , comment=None):
+        """
+        since: 1.9.0
+
+        Creates or updates a bookmark (position within a media file).
+        Bookmarks are personal and not visible to other users
+
+        mid:str         The ID of the media file to bookmark.  If a bookmark
+                        already exists for this file, it will be overwritten
+        position:int    The position (in milliseconds) within the media file
+        comment:str     A user-defined comment
+        """
+        methodName = 'createBookmark'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': mid , 'position': position , 
+            'comment': comment})
+
+        req = self._getRequest(viewName , q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def deleteBookmark(self , mid):
+        """
+        since: 1.9.0
+
+        Deletes the bookmark for a given file
+
+        mid:str     The ID of the media file to delete the bookmark from.
+                    Other users' bookmarks are not affected
+        """
+        methodName = 'deleteBookmark'
+        viewName = '%s.view' % methodName
+
+        q = {'id': mid}
+
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
