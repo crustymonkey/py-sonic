@@ -56,7 +56,7 @@ or the api docs on subsonic.org (listed above), you should be able to make use
 of your server without too much trouble.
 
 Right now, only plain old dictionary structures are returned.  The plan 
-for 0.2 includes the following:
+for a later release includes the following:
 
 * Proper object representations for Artist, Album, Song, etc.
 * Lazy access of members (the song objects aren't created until you want to
