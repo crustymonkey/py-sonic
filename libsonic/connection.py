@@ -87,7 +87,7 @@ class Connection(object):
         serverPath:str      The base resource path for the subsonic views.
                             This is useful if you have your subsonic server
                             behind a proxy and the path that you are proxying
-                            is differnt from the default of '/rest'.
+                            is different from the default of '/rest'.
                             Ex: 
                                 serverPath='/path/to/subs'
                                 
@@ -2234,3 +2234,55 @@ class Connection(object):
         if ts is None:
             return None
         return int(ts * 1000)
+
+    @property
+    def _separateServerPath(self):
+        """
+        separate REST portion of URL from base server path.
+        """
+        return urllib2.splithost(self._serverPath)[1].split('/')[0]
+
+    def scanMediaFolders(self):
+        """
+        This is not an officially supported method of the API
+
+        Same as selecting 'Settings' > 'Scan media folders now' with Subsonic web GUI
+
+        Returns True if refresh successful, False otherwise
+        """
+        methodName = 'scanNow'
+        return self._unsupportedAPIFunction(methodName)
+
+    def cleanupDatabase(self):
+        """
+        This is not an officially supported method of the API
+
+        Same as selecting 'Settings' > 'Clean-up Database' with Subsonic web GUI
+
+        Returns True if cleanup initiated successfully, False otherwise
+
+        Subsonic stores information about all media files ever encountered. By cleaning up the database,
+        information about files that are no longer in your media collection is permanently removed.
+        """
+        methodName = 'expunge'
+        return self._unsupportedAPIFunction(methodName)
+
+    def _unsupportedAPIFunction(self, methodName):
+        """
+        base function to call unsupported API methods
+
+        Returns True if refresh successful, False otherwise
+        :rtype : boolean
+        """
+        baseMethod = 'musicFolderSettings'
+        viewName = '%s.view' % baseMethod
+
+        short_serverPath = self._separateServerPath
+        url = '%s:%d/%s/%s?%s' % (self._baseUrl , self._port , short_serverPath , viewName, methodName)
+        req = urllib2.Request(url)
+        try:
+            res = self._opener.open(req)
+            res_msg = res.msg.lower()
+            return res_msg == 'ok'
+        except (urllib2.HTTPError, urllib2.URLError):
+            return False
