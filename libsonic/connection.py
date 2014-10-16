@@ -34,11 +34,17 @@ class HTTPSConnectionV3(httplib.HTTPSConnection):
         if self._tunnel_host:
             self.sock = sock
             self._tunnel()
+        # TODO: switch this to Python >= 2.7.9 SSLContext when available
         try:
-            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file, ssl_version=ssl.PROTOCOL_SSLv3)
-        except ssl.SSLError, e:
-            print("Trying SSLv3.")
-            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file, ssl_version=ssl.PROTOCOL_SSLv23)           
+            print("[warn] SSL certificates might not be validated!")
+            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
+                                        ssl_version=ssl.PROTOCOL_TLSv1)
+        except ssl.SSLError:
+            print("[error] fallback to SSLv3. Please consider using HTTP or a "
+                  "sane TLS config")
+            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
+                                        ssl_version=ssl.PROTOCOL_SSLv23)           
+
 
 class HTTPSHandlerV3(urllib2.HTTPSHandler):
     def https_open(self, req):
