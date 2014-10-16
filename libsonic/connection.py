@@ -26,7 +26,7 @@ API_VERSION = '1.10.2'
 
 class HTTPSConnectionChain(httplib.HTTPSConnection):
     _preferred_ssl_protos = (
-        ('TLSv1' , ssl.PROTOCOL_TLSv1)
+        ('TLSv1' , ssl.PROTOCOL_TLSv1) , 
         ('SSLv3' , ssl.PROTOCOL_SSLv3) ,
         ('SSLv23' , ssl.PROTOCOL_SSLv23) ,
     )
