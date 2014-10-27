@@ -24,28 +24,44 @@ import json , urllib2, httplib, socket, ssl
 
 API_VERSION = '1.10.2'
 
+class HTTPSConnectionChain(httplib.HTTPSConnection):
+    _preferred_ssl_protos = (
+        ('TLSv1' , ssl.PROTOCOL_TLSv1) , 
+        ('SSLv3' , ssl.PROTOCOL_SSLv3) ,
+        ('SSLv23' , ssl.PROTOCOL_SSLv23) ,
+    )
+    _ssl_working_proto = None
 
-class HTTPSConnectionV3(httplib.HTTPSConnection):
-    def __init__(self, *args, **kwargs):
-        httplib.HTTPSConnection.__init__(self, *args, **kwargs)
-        
     def connect(self):
         sock = socket.create_connection((self.host, self.port), self.timeout)
         if self._tunnel_host:
             self.sock = sock
             self._tunnel()
-        try:
-            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file, ssl_version=ssl.PROTOCOL_SSLv3)
-        except ssl.SSLError, e:
-            print("Trying SSLv3.")
-            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file, ssl_version=ssl.PROTOCOL_SSLv23)           
+        if self._ssl_working_proto is not None:
+            # If we have a working proto, let's use that straight away
+            print 'working proto: %s' % self._ssl_working_proto
+            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
+                ssl_version=self._ssl_working_proto)
+            return
+        # Try connecting via the different SSL protos in preference order
+        for proto_name , proto in self._preferred_ssl_protos:
+            try:
+                self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
+                    ssl_version=proto)
+            except:
+                pass
+            else:
+                # Cache the working ssl version
+                HTTPSConnectionChain._ssl_working_proto = proto
+                break
 
-class HTTPSHandlerV3(urllib2.HTTPSHandler):
-    def https_open(self, req):
-        return self.do_open(HTTPSConnectionV3, req)
+
+class HTTPSHandlerChain(urllib2.HTTPSHandler):
+    def https_open(self , req):
+        return self.do_open(HTTPSConnectionChain, req)
+
 # install opener
-urllib2.install_opener(urllib2.build_opener(HTTPSHandlerV3()))
-
+urllib2.install_opener(urllib2.build_opener(HTTPSHandlerChain()))
 
 class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
     """
@@ -2177,7 +2193,7 @@ class Connection(object):
     def _getOpener(self , username , passwd):
         creds = b64encode('%s:%s' % (username , passwd))
         opener = urllib2.build_opener(PysHTTPRedirectHandler , 
-           HTTPSHandlerV3)
+            HTTPSHandlerChain)
         opener.addheaders = [('Authorization' , 'Basic %s' % creds)]
         return opener
 
