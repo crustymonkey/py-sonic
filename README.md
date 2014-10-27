@@ -33,19 +33,21 @@ I have also added documentation at http://stuffivelearned.org/doku.php?id=progra
 This is about as basic as it gets.  We are just going to set up the connection
 and then get a couple of random songs.
 
-    #!/usr/bin/env python
+```python
+#!/usr/bin/env python
 
-    from pprint import pprint
-    import libsonic
+from pprint import pprint
+import libsonic
 
-    # We pass in the base url, the username, password, and port number
-    # Be sure to use https:// if this is an ssl connection!
-    conn = libsonic.Connection('https://music.example.com' , 'myuser' , 
-        'secretpass' , port=443)
-    # Let's get 2 completely random songs
-    songs = conn.getRandomSongs(size=2)
-    # We'll just pretty print the results we got to the terminal
-    pprint(songs)
+# We pass in the base url, the username, password, and port number
+# Be sure to use https:// if this is an ssl connection!
+conn = libsonic.Connection('https://music.example.com' , 'myuser' , 
+    'secretpass' , port=443)
+# Let's get 2 completely random songs
+songs = conn.getRandomSongs(size=2)
+# We'll just pretty print the results we got to the terminal
+pprint(songs)
+```
 
 As you can see, it's really pretty simple.  If you use the documentation 
 provided in the library:
