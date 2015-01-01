@@ -20,9 +20,11 @@ from urllib import urlencode
 from .errors import *
 from pprint import pprint
 from cStringIO import StringIO
-import json , urllib2, httplib, socket, ssl
+import json , urllib2, httplib, logging, socket, ssl
 
 API_VERSION = '1.10.2'
+
+logger = logging.getLogger(__name__)
 
 class HTTPSConnectionChain(httplib.HTTPSConnection):
     _preferred_ssl_protos = (
@@ -39,7 +41,8 @@ class HTTPSConnectionChain(httplib.HTTPSConnection):
             self._tunnel()
         if self._ssl_working_proto is not None:
             # If we have a working proto, let's use that straight away
-            print 'working proto: %s' % self._ssl_working_proto
+            logger.debug("Using known working proto: '%s'",
+                         self._ssl_working_proto)
             self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
                 ssl_version=self._ssl_working_proto)
             return
