@@ -1,3 +1,9 @@
+## 0.3.3
+
+* Added support for API version 1.11.0
+* Added a couple of additions from API version 1.10.x that were previously 
+  missed
+
 ## 0.3.1
 
 *  Incorporated unofficial API calls (beallio)
