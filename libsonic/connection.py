@@ -2177,7 +2177,7 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getArtistInfo(aid , count=20 , includeNotPresent=False):
+    def getArtistInfo(self , aid , count=20 , includeNotPresent=False):
         """
         since: 1.11.0
 
@@ -2200,7 +2200,7 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getArtistInfo2(aid , count=20 , includeNotPresent=False):
+    def getArtistInfo2(self , aid , count=20 , includeNotPresent=False):
         """
         since: 1.11.0
 
@@ -2222,7 +2222,7 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getSimilarSongs(iid , count=50):
+    def getSimilarSongs(self , iid , count=50):
         """
         since 1.11.0
 
@@ -2243,7 +2243,7 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getSimilarSongs2(iid , count=50):
+    def getSimilarSongs2(self , iid , count=50):
         """
         since 1.11.0
 
