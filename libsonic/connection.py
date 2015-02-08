@@ -97,8 +97,25 @@ class Connection(object):
         This will create a connection to your subsonic server
 
         baseUrl:str         The base url for your server. Be sure to use 
-                            "https" for SSL connections
+                            "https" for SSL connections.  If you are using
+                            a port other than the default 4040, be sure to
+                            specify that with the port argument.  Do *not*
+                            append it here.  
+
                             ex: http://subsonic.example.com
+
+                            If you are running subsonic under a different 
+                            path, specify that with the "serverPath" arg,
+                            *not* here.  For example, if your subsonic
+                            lives at:
+
+                            https://mydomain.com:8080/path/to/subsonic/rest
+
+                            You would set the following:
+
+                            baseUrl = "https://mydomain.com"
+                            port = 8080
+                            serverPath = "/path/to/subsonic/rest"
         username:str        The username to use for the connection
         password:str        The password to use for the connection
         port:int            The port number to connect on.  The default for
