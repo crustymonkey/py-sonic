@@ -1,3 +1,8 @@
+## 0.3.4
+
+* Add missing parameters to getAlbumList2 (thanks to basilfx)
+* Remove trailing whitespace (thanks to basilfx)
+
 ## 0.3.3
 
 * Added support for API version 1.11.0

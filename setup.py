@@ -18,31 +18,32 @@ along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
 from distutils.core import setup
+from libsonic import __version__ as version
 
-setup(name='py-sonic' ,
-    version='0.3.3' ,
-    author='Jay Deiman' ,
-    author_email='admin@splitstreams.com' ,
-    url='http://stuffivelearned.org' ,
+setup(name='py-sonic',
+    version=version,
+    author='Jay Deiman',
+    author_email='admin@splitstreams.com',
+    url='http://stuffivelearned.org',
     description='A python wrapper library for the Subsonic REST API.  '
-        'http://subsonic.org' ,
+        'http://subsonic.org',
     long_description='This is a basic wrapper library for the Subsonic '
         'REST API. This will allow you to connect to your server and retrieve '
-        'information and have it returned in basic Python types.' ,
-    packages=['libsonic'] ,
-    package_dir={'libsonic': 'libsonic'} ,
+        'information and have it returned in basic Python types.',
+    packages=['libsonic'],
+    package_dir={'libsonic': 'libsonic'},
     classifiers=[
-        'Development Status :: 4 - Beta' ,
-        'Intended Audience :: System Administrators' ,
-        'Intended Audience :: Information Technology' ,
-        'License :: OSI Approved :: GNU General Public License (GPL)' ,
-        'Natural Language :: English' ,
-        'Operating System :: POSIX' ,
-        'Programming Language :: Python' ,
-        'Topic :: System :: Systems Administration' ,
-        'Topic :: Internet :: WWW/HTTP' ,
-        'Topic :: Software Development :: Libraries :: Python Modules' ,
-        'Topic :: Software Development :: Libraries' ,
-        'Topic :: System' ,
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: System Administrators',
+        'Intended Audience :: Information Technology',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Natural Language :: English',
+        'Operating System :: POSIX',
+        'Programming Language :: Python',
+        'Topic :: System :: Systems Administration',
+        'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Software Development :: Libraries',
+        'Topic :: System',
     ]
 )
