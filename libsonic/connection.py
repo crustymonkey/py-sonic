@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 class HTTPSConnectionChain(httplib.HTTPSConnection):
     _preferred_ssl_protos = (
-        ('TLSv1' , ssl.PROTOCOL_TLSv1) , 
+        ('TLSv1' , ssl.PROTOCOL_TLSv1) ,
         ('SSLv3' , ssl.PROTOCOL_SSLv3) ,
         ('SSLv23' , ssl.PROTOCOL_SSLv23) ,
     )
@@ -68,7 +68,7 @@ urllib2.install_opener(urllib2.build_opener(HTTPSHandlerChain()))
 
 class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
     """
-    This class is used to override the default behavior of the 
+    This class is used to override the default behavior of the
     HTTPRedirectHandler, which does *not* redirect POST data
     """
     def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -91,20 +91,20 @@ class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
             raise urllib2.HTTPError(req.get_full_url(), code, msg, headers, fp)
 
 class Connection(object):
-    def __init__(self , baseUrl , username , password , port=4040 , 
+    def __init__(self , baseUrl , username , password , port=4040 ,
             serverPath='/rest' , appName='py-sonic' , apiVersion=API_VERSION):
         """
         This will create a connection to your subsonic server
 
-        baseUrl:str         The base url for your server. Be sure to use 
+        baseUrl:str         The base url for your server. Be sure to use
                             "https" for SSL connections.  If you are using
                             a port other than the default 4040, be sure to
                             specify that with the port argument.  Do *not*
-                            append it here.  
+                            append it here.
 
                             ex: http://subsonic.example.com
 
-                            If you are running subsonic under a different 
+                            If you are running subsonic under a different
                             path, specify that with the "serverPath" arg,
                             *not* here.  For example, if your subsonic
                             lives at:
@@ -124,16 +124,16 @@ class Connection(object):
                             This is useful if you have your subsonic server
                             behind a proxy and the path that you are proxying
                             is different from the default of '/rest'.
-                            Ex: 
+                            Ex:
                                 serverPath='/path/to/subs'
-                                
+
                               The full url that would be built then would be
                               (assuming defaults and using "example.com" and
                               you are using the "ping" view):
 
                                 http://example.com:4040/path/to/subs/ping.view
         appName:str         The name of your application.
-        apiVersion:str      The API version you wish to use for your 
+        apiVersion:str      The API version you wish to use for your
                             application.  Subsonic will throw an error if you
                             try to use/send an api version higher than what
                             the server supports.  See the Subsonic API docs
@@ -185,7 +185,7 @@ class Connection(object):
     def ping(self):
         """
         since: 1.0.0
-        
+
         Returns a boolean True if the server is alive, False otherwise
         """
         methodName = 'ping'
@@ -295,8 +295,8 @@ class Connection(object):
 
         Returns an indexed structure of all artists
 
-        musicFolderId:int       If this is specified, it will only return 
-                                artists for the given folder ID from 
+        musicFolderId:int       If this is specified, it will only return
+                                artists for the given folder ID from
                                 the getMusicFolders call
         ifModifiedSince:int     If specified, return a result if the artist
                                 collection has changed since the given time
@@ -321,7 +321,7 @@ class Connection(object):
         methodName = 'getIndexes'
         viewName = '%s.view' % methodName
 
-        q = self._getQueryDict({'musicFolderId': musicFolderId , 
+        q = self._getQueryDict({'musicFolderId': musicFolderId ,
             'ifModifiedSince': self._ts2milli(ifModifiedSince)})
 
         req = self._getRequest(viewName , q)
@@ -336,8 +336,8 @@ class Connection(object):
         Returns a listing of all files in a music directory.  Typically used
         to get a list of albums for an artist or list of songs for an album.
 
-        mid:str     The string ID value which uniquely identifies the 
-                    folder.  Obtained via calls to getIndexes or 
+        mid:str     The string ID value which uniquely identifies the
+                    folder.  Obtained via calls to getIndexes or
                     getMusicDirectory.  REQUIRED
 
         Returns a dict like the following:
@@ -392,7 +392,7 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def search(self , artist=None , album=None , title=None , any=None , 
+    def search(self , artist=None , album=None , title=None , any=None ,
             count=20 , offset=0 , newerThan=None):
         """
         since: 1.0.0
@@ -416,7 +416,7 @@ class Connection(object):
         methodName = 'search'
         viewName = '%s.view' % methodName
 
-        q = self._getQueryDict({'artist': artist , 'album': album , 
+        q = self._getQueryDict({'artist': artist , 'album': album ,
             'title': title , 'any': any , 'count': count , 'offset': offset ,
             'newerThan': self._ts2milli(newerThan)})
 
@@ -476,7 +476,7 @@ class Connection(object):
         methodName = 'search2'
         viewName = '%s.view' % methodName
 
-        q = {'query': query , 'artistCount': artistCount , 
+        q = {'query': query , 'artistCount': artistCount ,
             'artistOffset': artistOffset , 'albumCount': albumCount ,
             'albumOffset': albumOffset , 'songCount': songCount ,
             'songOffset': songOffset}
@@ -552,7 +552,7 @@ class Connection(object):
         methodName = 'search3'
         viewName = '%s.view' % methodName
 
-        q = {'query': query , 'artistCount': artistCount , 
+        q = {'query': query , 'artistCount': artistCount ,
             'artistOffset': artistOffset , 'albumCount': albumCount ,
             'albumOffset': albumOffset , 'songCount': songCount ,
             'songOffset': songOffset}
@@ -638,9 +638,9 @@ class Connection(object):
         """
         since: 1.2.0
 
-        Creates OR updates a playlist.  If updating the list, the 
+        Creates OR updates a playlist.  If updating the list, the
         playlistId is required.  If creating a list, the name is required.
-        
+
         playlistId:str      The ID of the playlist to UPDATE
         name:str            The name of the playlist to CREATE
         songIds:list        The list of songIds to populate the list with in
@@ -696,7 +696,7 @@ class Connection(object):
 
         sid:str     The ID of the music file to download.
 
-        Returns the file-like object for reading or raises an exception 
+        Returns the file-like object for reading or raises an exception
         on error
         """
         methodName = 'download'
@@ -716,16 +716,16 @@ class Connection(object):
         Downloads a given music file.
 
         sid:str         The ID of the music file to download.
-        maxBitRate:int  (since: 1.2.0) If specified, the server will 
-                        attempt to limit the bitrate to this value, in 
-                        kilobits per second. If set to zero (default), no limit 
-                        is imposed. Legal values are: 0, 32, 40, 48, 56, 64, 
+        maxBitRate:int  (since: 1.2.0) If specified, the server will
+                        attempt to limit the bitrate to this value, in
+                        kilobits per second. If set to zero (default), no limit
+                        is imposed. Legal values are: 0, 32, 40, 48, 56, 64,
                         80, 96, 112, 128, 160, 192, 224, 256 and 320.
         tformat:str     (since: 1.6.0) Specifies the target format
                         (e.g. "mp3" or "flv") in case there are multiple
                         applicable transcodings (since: 1.9.0) You can use
                         the special value "raw" to disable transcoding
-        timeOffset:int  (since: 1.6.0) Only applicable to video 
+        timeOffset:int  (since: 1.6.0) Only applicable to video
                         streaming.  Start the stream at the given
                         offset (in seconds) into the video
         size:str        (since: 1.6.0) The requested video size in
@@ -735,12 +735,12 @@ class Connection(object):
                                     will be set to an estimated
                                     value for trancoded media
 
-        Returns the file-like object for reading or raises an exception 
+        Returns the file-like object for reading or raises an exception
         on error
         """
         methodName = 'stream'
         viewName = '%s.view' % methodName
-        
+
         q = self._getQueryDict({'id': sid , 'maxBitRate': maxBitRate ,
             'format': tformat , 'timeOffset': timeOffset , 'size': size ,
             'estimateContentLength': estimateContentLength})
@@ -760,12 +760,12 @@ class Connection(object):
         aid:str     ID string for the cover art image to download
         size:int    If specified, scale image to this size
 
-        Returns the file-like object for reading or raises an exception 
+        Returns the file-like object for reading or raises an exception
         on error
         """
         methodName = 'getCoverArt'
         viewName = '%s.view' % methodName
-        
+
         q = self._getQueryDict({'id': aid , 'size': size})
 
         req = self._getRequest(viewName , q)
@@ -792,7 +792,7 @@ class Connection(object):
         sid:str             The ID of the file to scrobble
         submission:bool     Whether this is a "submission" or a "now playing"
                             notification
-        listenTime:int      (Since 1.8.0) The time (unix timestamp) at 
+        listenTime:int      (Since 1.8.0) The time (unix timestamp) at
                             which the song was listened to.
 
         Returns a dict like the following:
@@ -833,7 +833,7 @@ class Connection(object):
         hexPass = 'enc:%s' % self._hexEnc(password)
 
         # There seems to be an issue with some subsonic implementations
-        # not recognizing the "enc:" precursor to the encoded password and 
+        # not recognizing the "enc:" precursor to the encoded password and
         # encodes the whole "enc:<hex>" as the password.  Weird.
         #q = {'username': username , 'password': hexPass.lower()}
         q = {'username': username , 'password': password}
@@ -851,12 +851,12 @@ class Connection(object):
         Can be used to enable/disable certain features in the client, such
         as jukebox control
 
-        username:str        The username to retrieve.  You can only retrieve 
+        username:str        The username to retrieve.  You can only retrieve
                             your own user unless you have admin privs.
 
         Returns a dict like the following:
 
-        {u'status': u'ok', 
+        {u'status': u'ok',
          u'user': {u'adminRole': False,
                u'commentRole': False,
                u'coverArtRole': False,
@@ -917,10 +917,10 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def createUser(self , username , password , email , 
-            ldapAuthenticated=False , adminRole=False , settingsRole=True , 
-            streamRole=True , jukeboxRole=False , downloadRole=False , 
-            uploadRole=False , playlistRole=False , coverArtRole=False , 
+    def createUser(self , username , password , email ,
+            ldapAuthenticated=False , adminRole=False , settingsRole=True ,
+            streamRole=True , jukeboxRole=False , downloadRole=False ,
+            uploadRole=False , playlistRole=False , coverArtRole=False ,
             commentRole=False , podcastRole=False , shareRole=False):
         """
         since: 1.1.0
@@ -957,9 +957,9 @@ class Connection(object):
         return res
 
     def updateUser(self , username ,  password=None , email=None ,
-            ldapAuthenticated=False , adminRole=False , settingsRole=True , 
-            streamRole=True , jukeboxRole=False , downloadRole=False , 
-            uploadRole=False , playlistRole=False , coverArtRole=False , 
+            ldapAuthenticated=False , adminRole=False , settingsRole=True ,
+            streamRole=True , jukeboxRole=False , downloadRole=False ,
+            uploadRole=False , playlistRole=False , coverArtRole=False ,
             commentRole=False , podcastRole=False , shareRole=False):
         """
         since 1.10.1
@@ -967,7 +967,7 @@ class Connection(object):
         Modifies an existing Subsonic user.
 
         username:str        The username of the user to update.
-        
+
         All other args are the same as create user and you can update
         whatever item you wish to update for the given username.
 
@@ -982,7 +982,7 @@ class Connection(object):
         if password is not None:
             password = 'enc:%s' % self._hexEnc(password)
         q = self._getQueryDict({'username': username , 'password': password ,
-            'email': email , 'ldapAuthenticated': ldapAuthenticated , 
+            'email': email , 'ldapAuthenticated': ldapAuthenticated ,
             'adminRole': adminRole ,
             'settingsRole': settingsRole , 'streamRole': streamRole ,
             'jukeboxRole': jukeboxRole , 'downloadRole': downloadRole ,
@@ -1018,7 +1018,7 @@ class Connection(object):
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
-    
+
     def getChatMessages(self , since=1):
         """
         since: 1.2.0
@@ -1072,20 +1072,20 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getAlbumList(self , ltype , size=10 , offset=0 , fromYear=None , 
+    def getAlbumList(self , ltype , size=10 , offset=0 , fromYear=None ,
             toYear=None , genre=None , musicFolderId=None):
         """
         since: 1.2.0
 
-        Returns a list of random, newest, highest rated etc. albums. 
-        Similar to the album lists on the home page of the Subsonic 
+        Returns a list of random, newest, highest rated etc. albums.
+        Similar to the album lists on the home page of the Subsonic
         web interface
 
-        ltype:str       The list type. Must be one of the following: random, 
-                        newest, highest, frequent, recent, 
-                        (since 1.8.0 -> )starred, alphabeticalByName, 
+        ltype:str       The list type. Must be one of the following: random,
+                        newest, highest, frequent, recent,
+                        (since 1.8.0 -> )starred, alphabeticalByName,
                         alphabeticalByArtist
-                        Since 1.10.1 you can use byYear and byGenre to 
+                        Since 1.10.1 you can use byYear and byGenre to
                         list albums in a given year range or genre.
         size:int        The number of albums to return. Max 500
         offset:int      The list offset. Use for paging. Max 5000
@@ -1095,7 +1095,7 @@ class Connection(object):
                         specify toYear
         genre:str       The name of the genre e.g. "Rock".  You must specify
                         genre if you set the ltype to "byGenre"
-        musicFolderId:str   Only return albums in the music folder with 
+        musicFolderId:str   Only return albums in the music folder with
                             the given ID. See getMusicFolders()
 
         Returns a dict like the following:
@@ -1118,7 +1118,7 @@ class Connection(object):
         methodName = 'getAlbumList'
         viewName = '%s.view' % methodName
 
-        q = self._getQueryDict({'type': ltype , 'size': size , 
+        q = self._getQueryDict({'type': ltype , 'size': size ,
             'offset': offset , 'fromYear': fromYear , 'toYear': toYear ,
             'genre': genre , 'musicFolderId': musicFolderId})
 
@@ -1127,20 +1127,20 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getAlbumList2(self , ltype , size=10 , offset=0 , fromYear=None , 
+    def getAlbumList2(self , ltype , size=10 , offset=0 , fromYear=None ,
             toYear=None , genre=None):
         """
         since 1.8.0
 
-        Returns a list of random, newest, highest rated etc. albums. 
+        Returns a list of random, newest, highest rated etc. albums.
         This is similar to getAlbumList, but uses ID3 tags for
         organization
 
-        ltype:str       The list type. Must be one of the following: random, 
-                        newest, highest, frequent, recent, 
-                        (since 1.8.0 -> )starred, alphabeticalByName, 
+        ltype:str       The list type. Must be one of the following: random,
+                        newest, highest, frequent, recent,
+                        (since 1.8.0 -> )starred, alphabeticalByName,
                         alphabeticalByArtist
-                        Since 1.10.1 you can use byYear and byGenre to 
+                        Since 1.10.1 you can use byYear and byGenre to
                         list albums in a given year range or genre.
         size:int        The number of albums to return. Max 500
         offset:int      The list offset. Use for paging. Max 5000
@@ -1175,7 +1175,7 @@ class Connection(object):
         methodName = 'getAlbumList2'
         viewName = '%s.view' % methodName
 
-        q = self._getQueryDict({'type': ltype , 'size': size , 
+        q = self._getQueryDict({'type': ltype , 'size': size ,
             'offset': offset , 'fromYear': fromYear , 'toYear': toYear ,
             'genre': genre})
 
@@ -1184,7 +1184,7 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getRandomSongs(self , size=10 , genre=None , fromYear=None , 
+    def getRandomSongs(self , size=10 , genre=None , fromYear=None ,
             toYear=None , musicFolderId=None):
         """
         since 1.2.0
@@ -1235,8 +1235,8 @@ class Connection(object):
         methodName = 'getRandomSongs'
         viewName = '%s.view' % methodName
 
-        q = self._getQueryDict({'size': size , 'genre': genre , 
-            'fromYear': fromYear , 'toYear': toYear , 
+        q = self._getQueryDict({'size': size , 'genre': genre ,
+            'fromYear': fromYear , 'toYear': toYear ,
             'musicFolderId': musicFolderId})
 
         req = self._getRequest(viewName , q)
@@ -1253,7 +1253,7 @@ class Connection(object):
         artist:str      The artist name
         title:str       The song title
 
-        Returns a dict like the following for 
+        Returns a dict like the following for
         getLyrics('Bob Dylan' , 'Blowin in the wind'):
 
         {u'lyrics': {u'artist': u'Bob Dylan',
@@ -1273,29 +1273,29 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def jukeboxControl(self , action , index=None , sids=[] , gain=None , 
+    def jukeboxControl(self , action , index=None , sids=[] , gain=None ,
             offset=None):
         """
         since: 1.2.0
 
         NOTE: Some options were added as of API version 1.7.0
 
-        Controls the jukebox, i.e., playback directly on the server's 
-        audio hardware. Note: The user must be authorized to control 
+        Controls the jukebox, i.e., playback directly on the server's
+        audio hardware. Note: The user must be authorized to control
         the jukebox
 
-        action:str      The operation to perform. Must be one of: get, 
-                        start, stop, skip, add, clear, remove, shuffle, 
-                        setGain, status (added in API 1.7.0), 
+        action:str      The operation to perform. Must be one of: get,
+                        start, stop, skip, add, clear, remove, shuffle,
+                        setGain, status (added in API 1.7.0),
                         set (added in API 1.7.0)
-        index:int       Used by skip and remove. Zero-based index of the 
+        index:int       Used by skip and remove. Zero-based index of the
                         song to skip to or remove.
-        sids:str        Used by "add" and "set". ID of song to add to the 
-                        jukebox playlist. Use multiple id parameters to 
-                        add many songs in the same request.  Whether you 
-                        are passing one song or many into this, this 
+        sids:str        Used by "add" and "set". ID of song to add to the
+                        jukebox playlist. Use multiple id parameters to
+                        add many songs in the same request.  Whether you
+                        are passing one song or many into this, this
                         parameter MUST be a list
-        gain:float      Used by setGain to control the playback volume. 
+        gain:float      Used by setGain to control the playback volume.
                         A float value between 0.0 and 1.0
         offset:int      (added in API 1.7.0) Used by "skip".  Start playing
                         this many seconds into the track.
@@ -1303,7 +1303,7 @@ class Connection(object):
         methodName = 'jukeboxControl'
         viewName = '%s.view' % methodName
 
-        q = self._getQueryDict({'action': action , 'index': index , 
+        q = self._getQueryDict({'action': action , 'index': index ,
             'gain': gain , 'offset': offset})
 
         req = None
@@ -1323,12 +1323,12 @@ class Connection(object):
         """
         since: 1.6.0
 
-        Returns all podcast channels the server subscribes to and their 
+        Returns all podcast channels the server subscribes to and their
         episodes.
 
-        incEpisodes:bool    (since: 1.9.0) Whether to include Podcast 
+        incEpisodes:bool    (since: 1.9.0) Whether to include Podcast
                             episodes in the returned result.
-        pid:str             (since: 1.9.0) If specified, only return 
+        pid:str             (since: 1.9.0) If specified, only return
                             the Podcast channel with this ID.
 
         Returns a dict like the following:
@@ -1377,7 +1377,7 @@ class Connection(object):
         methodName = 'getPodcasts'
         viewName = '%s.view' % methodName
 
-        q = self._getQueryDict({'includeEpisodes': incEpisodes , 
+        q = self._getQueryDict({'includeEpisodes': incEpisodes ,
             'id': pid})
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
@@ -1425,16 +1425,16 @@ class Connection(object):
         """
         since: 1.6.0
 
-        Creates a public URL that can be used by anyone to stream music 
-        or video from the Subsonic server. The URL is short and suitable 
-        for posting on Facebook, Twitter etc. Note: The user must be 
-        authorized to share (see Settings > Users > User is allowed to 
+        Creates a public URL that can be used by anyone to stream music
+        or video from the Subsonic server. The URL is short and suitable
+        for posting on Facebook, Twitter etc. Note: The user must be
+        authorized to share (see Settings > Users > User is allowed to
         share files with anyone).
 
-        shids:list[str]              A list of ids of songs, albums or videos 
+        shids:list[str]              A list of ids of songs, albums or videos
                                     to share.
         description:str             A description that will be displayed to
-                                    people visiting the shared media 
+                                    people visiting the shared media
                                     (optional).
         expires:float               A timestamp pertaining to the time at
                                     which this should expire (optional)
@@ -1445,7 +1445,7 @@ class Connection(object):
         methodName = 'createShare'
         viewName = '%s.view' % methodName
 
-        q = self._getQueryDict({'description': description , 
+        q = self._getQueryDict({'description': description ,
             'expires': self._ts2milli(expires)})
         req = self._getRequestWithList(viewName , 'id' , shids , q)
         res = self._doInfoReq(req)
@@ -1519,7 +1519,7 @@ class Connection(object):
                 '%r' % rating)
 
         q = self._getQueryDict({'id': id , 'rating': rating})
-        
+
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -1545,11 +1545,11 @@ class Connection(object):
                           u'name': u'T'}]},
              u'status': u'ok',
              u'version': u'1.8.0',
-             u'xmlns': u'http://subsonic.org/restapi'}    
+             u'xmlns': u'http://subsonic.org/restapi'}
         """
         methodName = 'getArtists'
         viewName = '%s.view' % methodName
-        
+
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -1559,13 +1559,13 @@ class Connection(object):
         """
         since 1.8.0
 
-        Returns the info (albums) for an artist.  This method uses 
+        Returns the info (albums) for an artist.  This method uses
         the ID3 tags for organization
 
         id:str      The artist ID
 
         Returns a dict like the following:
-            
+
            {u'artist': {u'album': [{u'artist': u'Tune-Yards',
                          u'artistId': 1,
                          u'coverArt': u'al-7',
@@ -1610,7 +1610,7 @@ class Connection(object):
         id:str      The album ID
 
         Returns a dict like the following:
-            
+
            {u'album': {u'artist': u'Massive Attack',
             u'artistId': 0,
             u'coverArt': u'al-0',
@@ -1658,7 +1658,7 @@ class Connection(object):
         """
         since 1.8.0
 
-        Returns the info for a song.  This method uses the ID3 
+        Returns the info for a song.  This method uses the ID3
         tags for organization
 
         id:str      The song ID
@@ -1810,7 +1810,7 @@ class Connection(object):
         but this uses ID3 tags for organization
 
         Returns a dict like the following:
-            
+
             **See the output from getStarred()**
         """
         methodName = 'getStarred2'
@@ -1833,11 +1833,11 @@ class Connection(object):
         name:str                The human readable name of the playlist
         comment:str             The playlist comment
         songIdsToAdd:list       A list of song IDs to add to the playlist
-        songIndexesToRemove:list    Remove the songs at the 
+        songIndexesToRemove:list    Remove the songs at the
                                     0 BASED INDEXED POSITIONS in the
-                                    playlist, NOT the song ids.  Note that 
+                                    playlist, NOT the song ids.  Note that
                                     this is always a list.
-        
+
         Returns a normal status response dict
         """
         methodName = 'updatePlaylist'
@@ -1866,12 +1866,12 @@ class Connection(object):
 
         username:str    The user to retrieve the avatar for
 
-        Returns the file-like object for reading or raises an exception 
+        Returns the file-like object for reading or raises an exception
         on error
         """
         methodName = 'getAvatar'
         viewName = '%s.view' % methodName
-        
+
         q = {'username': username}
 
         req = self._getRequest(viewName , q)
@@ -1968,7 +1968,7 @@ class Connection(object):
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
-    
+
     def getSongsByGenre(self , genre , count=10 , offset=0):
         """
         since 1.9.0
@@ -1983,8 +1983,8 @@ class Connection(object):
         methodName = 'getGenres'
         viewName = '%s.view' % methodName
 
-        q = {'genre': genre , 
-            'count': count , 
+        q = {'genre': genre ,
+            'count': count ,
             'offset': offset ,
         }
 
@@ -1998,23 +1998,23 @@ class Connection(object):
         since 1.8.0
 
         Creates an HTTP live streaming playlist for streaming video or
-        audio HLS is a streaming protocol implemented by Apple and 
-        works by breaking the overall stream into a sequence of small 
-        HTTP-based file downloads. It's supported by iOS and newer 
-        versions of Android. This method also supports adaptive 
+        audio HLS is a streaming protocol implemented by Apple and
+        works by breaking the overall stream into a sequence of small
+        HTTP-based file downloads. It's supported by iOS and newer
+        versions of Android. This method also supports adaptive
         bitrate streaming, see the bitRate parameter.
 
         mid:str     The ID of the media to stream
-        bitrate:str If specified, the server will attempt to limit the 
-                    bitrate to this value, in kilobits per second. If 
-                    this parameter is specified more than once, the 
-                    server will create a variant playlist, suitable 
-                    for adaptive bitrate streaming. The playlist will 
-                    support streaming at all the specified bitrates. 
-                    The server will automatically choose video dimensions 
-                    that are suitable for the given bitrates. 
-                    (since: 1.9.0) you may explicitly request a certain 
-                    width (480) and height (360) like so: 
+        bitrate:str If specified, the server will attempt to limit the
+                    bitrate to this value, in kilobits per second. If
+                    this parameter is specified more than once, the
+                    server will create a variant playlist, suitable
+                    for adaptive bitrate streaming. The playlist will
+                    support streaming at all the specified bitrates.
+                    The server will automatically choose video dimensions
+                    that are suitable for the given bitrates.
+                    (since: 1.9.0) you may explicitly request a certain
+                    width (480) and height (360) like so:
                     bitRate=1000@480x360
 
         Returns the raw m3u8 file as a string
@@ -2066,7 +2066,7 @@ class Connection(object):
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
-    
+
     def deletePodcastChannel(self , pid):
         """
         since: 1.9.0
@@ -2109,7 +2109,7 @@ class Connection(object):
         """
         since: 1.9.0
 
-        Tells the server to start downloading a given Podcast episode. 
+        Tells the server to start downloading a given Podcast episode.
         Note: The user must be authorized for Podcast administration
 
         pid:str         The ID of the Podcast episode to download
@@ -2168,7 +2168,7 @@ class Connection(object):
         methodName = 'createBookmark'
         viewName = '%s.view' % methodName
 
-        q = self._getQueryDict({'id': mid , 'position': position , 
+        q = self._getQueryDict({'id': mid , 'position': position ,
             'comment': comment})
 
         req = self._getRequest(viewName , q)
@@ -2204,15 +2204,15 @@ class Connection(object):
 
         aid:str                 The ID of the artist, album or song
         count:int               The max number of similar artists to return
-        includeNotPresent:bool  Whether to return artists that are not 
+        includeNotPresent:bool  Whether to return artists that are not
                                 present in the media library
         """
         methodName = 'getArtistInfo'
         viewName = '%s.view' % methodName
 
-        q = {'id': aid , 'count': count , 
+        q = {'id': aid , 'count': count ,
             'includeNotPresent': includeNotPresent}
-        
+
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -2226,15 +2226,15 @@ class Connection(object):
 
         aid:str                 The ID of the artist, album or song
         count:int               The max number of similar artists to return
-        includeNotPresent:bool  Whether to return artists that are not 
+        includeNotPresent:bool  Whether to return artists that are not
                                 present in the media library
         """
         methodName = 'getArtistInfo2'
         viewName = '%s.view' % methodName
 
-        q = {'id': aid , 'count': count , 
+        q = {'id': aid , 'count': count ,
             'includeNotPresent': includeNotPresent}
-        
+
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -2244,8 +2244,8 @@ class Connection(object):
         """
         since 1.11.0
 
-        Returns a random collection of songs from the given artist and 
-        similar artists, using data from last.fm. Typically used for 
+        Returns a random collection of songs from the given artist and
+        similar artists, using data from last.fm. Typically used for
         artist radio features.
 
         iid:str     The artist, album, or song ID
@@ -2255,7 +2255,7 @@ class Connection(object):
         viewName = '%s.view' % methodName
 
         q = {'id': iid , 'count': count}
-        
+
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -2265,7 +2265,7 @@ class Connection(object):
         """
         since 1.11.0
 
-        Similar to getSimilarSongs(), but organizes music according to 
+        Similar to getSimilarSongs(), but organizes music according to
         ID3 tags
 
         iid:str     The artist, album, or song ID
@@ -2275,7 +2275,7 @@ class Connection(object):
         viewName = '%s.view' % methodName
 
         q = {'id': iid , 'count': count}
-        
+
         req = self._getRequest(viewName , q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -2285,7 +2285,7 @@ class Connection(object):
         """
         This is not an officially supported method of the API
 
-        Same as selecting 'Settings' > 'Scan media folders now' with 
+        Same as selecting 'Settings' > 'Scan media folders now' with
         Subsonic web GUI
 
         Returns True if refresh successful, False otherwise
@@ -2297,13 +2297,13 @@ class Connection(object):
         """
         This is not an officially supported method of the API
 
-        Same as selecting 'Settings' > 'Clean-up Database' with Subsonic 
+        Same as selecting 'Settings' > 'Clean-up Database' with Subsonic
         web GUI
 
         Returns True if cleanup initiated successfully, False otherwise
 
         Subsonic stores information about all media files ever encountered.
-        By cleaning up the database, information about files that are 
+        By cleaning up the database, information about files that are
         no longer in your media collection is permanently removed.
         """
         methodName = 'expunge'
@@ -2319,7 +2319,7 @@ class Connection(object):
         baseMethod = 'musicFolderSettings'
         viewName = '%s.view' % baseMethod
 
-        url = '%s:%d/%s/%s?%s' % (self._baseUrl , self._port , 
+        url = '%s:%d/%s/%s?%s' % (self._baseUrl , self._port ,
             self._separateServerPath() , viewName, methodName)
         req = urllib2.Request(url)
         res = self._opener.open(req)
@@ -2329,7 +2329,7 @@ class Connection(object):
     # Private internal methods
     def _getOpener(self , username , passwd):
         creds = b64encode('%s:%s' % (username , passwd))
-        opener = urllib2.build_opener(PysHTTPRedirectHandler , 
+        opener = urllib2.build_opener(PysHTTPRedirectHandler ,
             HTTPSHandlerChain)
         opener.addheaders = [('Authorization' , 'Basic %s' % creds)]
         return opener
@@ -2369,8 +2369,8 @@ class Connection(object):
 
     def _getRequestWithLists(self , viewName , listMap , query={}):
         """
-        Like _getRequestWithList(), but you must pass a dictionary 
-        that maps the listName to the list.  This allows for multiple 
+        Like _getRequestWithList(), but you must pass a dictionary
+        that maps the listName to the list.  This allows for multiple
         list parameters to be used, like in updatePlaylist()
 
         viewName:str        The name of the view
