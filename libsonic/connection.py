@@ -1127,7 +1127,8 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getAlbumList2(self , ltype , size=10 , offset=0):
+    def getAlbumList2(self , ltype , size=10 , offset=0 , fromYear=None , 
+            toYear=None , genre=None):
         """
         since 1.8.0
 
