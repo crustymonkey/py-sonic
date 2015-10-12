@@ -92,7 +92,8 @@ class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
 
 class Connection(object):
     def __init__(self , baseUrl , username , password , port=4040 ,
-            serverPath='/rest' , appName='py-sonic' , apiVersion=API_VERSION):
+            serverPath='/rest' , appName='py-sonic' , apiVersion=API_VERSION,
+            insecure=False):
         """
         This will create a connection to your subsonic server
 
@@ -140,6 +141,9 @@ class Connection(object):
                             to find the Subsonic version -> API version table.
                             This is useful if you are connecting to an older
                             version of Subsonic.
+        insecure:bool       This will allow you to use self signed
+                            certificates when connecting if set to True.
+
         """
         self._baseUrl = baseUrl
         self._username = username
@@ -148,6 +152,7 @@ class Connection(object):
         self._apiVersion = apiVersion
         self._appName = appName
         self._serverPath = serverPath.strip('/')
+        self._insecure = insecure
         self._opener = self._getOpener(self._username , self._rawPass)
 
     # Properties
@@ -180,6 +185,10 @@ class Connection(object):
     def setServerPath(self , path):
         self._serverPath = path.strip('/')
     serverPath = property(lambda s: s._serverPath , setServerPath)
+
+    def setInsecure(self, insecure):
+        self._insecure = insecure
+    insecure = property(lambda s: s._insecure, setInsecure)
 
     # API methods
     def ping(self):
@@ -2329,8 +2338,11 @@ class Connection(object):
     # Private internal methods
     def _getOpener(self , username , passwd):
         creds = b64encode('%s:%s' % (username , passwd))
+        context = None
+        if self._insecure:
+            context = ssl._create_unverified_context()
         opener = urllib2.build_opener(PysHTTPRedirectHandler ,
-            HTTPSHandlerChain)
+            HTTPSHandlerChain(context=context))
         opener.addheaders = [('Authorization' , 'Basic %s' % creds)]
         return opener
 
