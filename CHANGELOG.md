@@ -1,3 +1,7 @@
+## 0.3.5
+
+* allow for self-signed certs
+
 ## 0.3.4
 
 * Add missing parameters to getAlbumList2 (thanks to basilfx)
