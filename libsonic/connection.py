@@ -337,6 +337,7 @@ class Connection(object):
         req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
+        self._fixLastModified(res)
         return res
 
     def getMusicDirectory(self, mid):
@@ -2523,7 +2524,6 @@ class Connection(object):
         # Returns a parsed dictionary version of the result
         res = self._opener.open(req)
         dres = json.loads(res.read())
-        self._fixLastModified(dres)
         return dres['subsonic-response']
 
     def _doBinReq(self, req):
