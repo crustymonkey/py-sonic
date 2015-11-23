@@ -22,7 +22,7 @@ from pprint import pprint
 from cStringIO import StringIO
 import json, urllib2, httplib, logging, socket, ssl
 
-API_VERSION = '1.12.0'
+API_VERSION = '1.13.0'
 
 logger = logging.getLogger(__name__)
 
