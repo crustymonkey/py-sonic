@@ -308,7 +308,8 @@ class Connection(object):
                                 artists for the given folder ID from
                                 the getMusicFolders call
         ifModifiedSince:int     If specified, return a result if the artist
-                                collection has changed since the given time
+                                collection has changed since the given 
+                                unix timestamp
 
         Returns a dict like the following:
 
@@ -2342,7 +2343,7 @@ class Connection(object):
         if not isinstance(qids, (tuple, list)):
             qids = [qids]
 
-        q = self._getQueryDict({'current': current, 'position', position})
+        q = self._getQueryDict({'current': current, 'position': position})
         
         req = self._getRequestWithLists(viewName, {'id', qids}, q)
         res = self._doInfoReq(req)
@@ -2522,6 +2523,7 @@ class Connection(object):
         # Returns a parsed dictionary version of the result
         res = self._opener.open(req)
         dres = json.loads(res.read())
+        self._fixLastModified(dres)
         return dres['subsonic-response']
 
     def _doBinReq(self, req):
@@ -2567,4 +2569,23 @@ class Connection(object):
         separate REST portion of URL from base server path.
         """
         return urllib2.splithost(self._serverPath)[1].split('/')[0]
+
+    def _fixLastModified(self, data):
+        """
+        This will recursively walk through a data structure and look for
+        a dict key/value pair where the key is "lastModified" and change
+        the shitty java millisecond timestamp to a real unix timestamp
+        of SECONDS since the unix epoch.  JAVA SUCKS!
+        """
+        if isinstance(data, dict):
+            for k, v in data.items():
+                if k == 'lastModified':
+                    data[k] = long(v) / 1000.0
+                    return
+                elif isinstance(v, (tuple, list, dict)):
+                    return self._fixLastModified(v)
+        elif isinstance(data, (list, tuple)):
+            for item in data:
+                if isinstance(item, (list, tuple, dict)):
+                    return self._fixLastModified(item)
 

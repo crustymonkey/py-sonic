@@ -2,6 +2,7 @@
 
 * Added missing 1.12.0 API items
 * Added 1.13.0 API items
+* All timestamps both passed in, and returned, should now be in **proper** unix time, which is seconds since the epoch, **not** milliseconds since the epoch
 
 ## 0.3.5
 
