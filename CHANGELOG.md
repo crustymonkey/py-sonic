@@ -1,4 +1,4 @@
-## 0.3.6
+## 0.4.0
 
 * Added missing 1.12.0 API items
 * Added 1.13.0 API items
