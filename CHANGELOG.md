@@ -1,3 +1,8 @@
+## 0.3.6
+
+* Added missing 1.12.0 API items
+* Added 1.13.0 API items
+
 ## 0.3.5
 
 * allow for self-signed certs

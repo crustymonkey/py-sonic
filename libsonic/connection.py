@@ -979,7 +979,7 @@ class Connection(object):
             streamRole=True, jukeboxRole=False, downloadRole=False,
             uploadRole=False, playlistRole=False, coverArtRole=False,
             commentRole=False, podcastRole=False, shareRole=False,
-            musicFolderId=None):
+            musicFolderId=None, maxBitRate=0):
         """
         since 1.10.1
 
@@ -988,6 +988,7 @@ class Connection(object):
         username:str        The username of the user to update.
         musicFolderId:int   Only return results from the music folder
                             with the given ID. See getMusicFolders
+        maxBitRate:int      The max bitrate for the user.  0 is unlimited
 
         All other args are the same as create user and you can update
         whatever item you wish to update for the given username.
@@ -1010,7 +1011,7 @@ class Connection(object):
             'uploadRole': uploadRole, 'playlistRole': playlistRole,
             'coverArtRole': coverArtRole, 'commentRole': commentRole,
             'podcastRole': podcastRole, 'shareRole': shareRole,
-            'musicFolderId': musicFolderId
+            'musicFolderId': musicFolderId, 'maxBitRate': maxBitRate
         })
         req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
@@ -2367,6 +2368,43 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
+    def getTopSongs(self, artist, count=50):
+        """
+        since 1.13.0
+
+        Returns the top songs for a given artist
+
+        artist:str      The artist to get songs for
+        count:int       The number of songs to return
+        """
+        methodName = 'getTopSongs'
+        viewName = '%s.view' % methodName
+        
+        q = {'artist': artist, 'count': count}
+        
+        req = self._getRequest(viewName, q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getNewestPodcasts(self, count=20):
+        """
+        since 1.13.0
+
+        Returns the most recently published Podcast episodes
+
+        count:int       The number of episodes to return
+        """
+        methodName = 'getNewestPodcasts'
+        viewName = '%s.view' % methodName
+        
+        q = {'count': count}
+        
+        req = self._getRequest(viewName, q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
     def scanMediaFolders(self):
         """
         This is not an officially supported method of the API
@@ -2412,7 +2450,9 @@ class Connection(object):
         res_msg = res.msg.lower()
         return res_msg == 'ok'
 
+    #
     # Private internal methods
+    #
     def _getOpener(self, username, passwd):
         creds = b64encode('%s:%s' % (username, passwd))
         context = None
