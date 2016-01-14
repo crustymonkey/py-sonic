@@ -18,7 +18,6 @@ along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 from base64 import b64encode
 from urllib import urlencode
 from .errors import *
-from pprint import pprint
 from cStringIO import StringIO
 import json, urllib2, httplib, logging, socket, ssl
 
