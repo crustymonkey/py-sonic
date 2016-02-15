@@ -20,7 +20,7 @@ from urllib import urlencode
 from .errors import *
 from pprint import pprint
 from cStringIO import StringIO
-import json, urllib2, httplib, logging, socket, ssl
+import json, urllib2, httplib, logging, socket, ssl, sys
 
 API_VERSION = '1.13.0'
 
@@ -28,31 +28,37 @@ logger = logging.getLogger(__name__)
 
 class HTTPSConnectionChain(httplib.HTTPSConnection):
     _preferred_ssl_protos = (
-        ('TLSv1', ssl.PROTOCOL_TLSv1),
-        ('SSLv3', ssl.PROTOCOL_SSLv3),
         ('SSLv23', ssl.PROTOCOL_SSLv23),
+        ('TLSv1', ssl.PROTOCOL_TLSv1),
     )
     _ssl_working_proto = None
 
-    def connect(self):
+    def _create_sock(self):
         sock = socket.create_connection((self.host, self.port), self.timeout)
         if self._tunnel_host:
             self.sock = sock
             self._tunnel()
+        return sock
+
+    def connect(self):
         if self._ssl_working_proto is not None:
             # If we have a working proto, let's use that straight away
             logger.debug("Using known working proto: '%s'",
                          self._ssl_working_proto)
+            sock = self._create_sock()
             self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
                 ssl_version=self._ssl_working_proto)
             return
+
         # Try connecting via the different SSL protos in preference order
         for proto_name, proto in self._preferred_ssl_protos:
+            import pdb; pdb.set_trace()
+            sock = self._create_sock()
             try:
                 self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
                     ssl_version=proto)
             except:
-                pass
+                sock.close()
             else:
                 # Cache the working ssl version
                 HTTPSConnectionChain._ssl_working_proto = proto
@@ -2346,7 +2352,7 @@ class Connection(object):
 
         q = self._getQueryDict({'current': current, 'position': position})
         
-        req = self._getRequestWithLists(viewName, {'id', qids}, q)
+        req = self._getRequestWithLists(viewName, {'id': qids}, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2457,11 +2463,12 @@ class Connection(object):
     #
     def _getOpener(self, username, passwd):
         creds = b64encode('%s:%s' % (username, passwd))
-        context = None
-        if self._insecure:
-            context = ssl._create_unverified_context()
-        opener = urllib2.build_opener(PysHTTPRedirectHandler,
-            HTTPSHandlerChain(context=context))
+        # Context is only relevent in >= python 2.7.9
+        https_chain = HTTPSHandlerChain()
+        if sys.version_info[:3] >= (2, 7, 9) and self._insecure:
+            https_chain = HTTPSHandlerChain(
+                context=ssl._create_unverified_context())
+        opener = urllib2.build_opener(PysHTTPRedirectHandler, https_chain)
         opener.addheaders = [('Authorization', 'Basic %s' % creds)]
         return opener
 
