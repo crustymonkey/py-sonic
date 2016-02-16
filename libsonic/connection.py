@@ -27,10 +27,8 @@ API_VERSION = '1.13.0'
 logger = logging.getLogger(__name__)
 
 class HTTPSConnectionChain(httplib.HTTPSConnection):
-    _preferred_ssl_protos = (
-        ('SSLv23', ssl.PROTOCOL_SSLv23),
-        ('TLSv1', ssl.PROTOCOL_TLSv1),
-    )
+    _preferred_ssl_protos = sorted([ p for p in dir(ssl)
+        if p.startswith('PROTOCOL_') ], reverse=True)
     _ssl_working_proto = None
 
     def _create_sock(self):
@@ -51,9 +49,9 @@ class HTTPSConnectionChain(httplib.HTTPSConnection):
             return
 
         # Try connecting via the different SSL protos in preference order
-        for proto_name, proto in self._preferred_ssl_protos:
-            import pdb; pdb.set_trace()
+        for proto_name in self._preferred_ssl_protos:
             sock = self._create_sock()
+            proto = getattr(ssl, proto_name, None)
             try:
                 self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
                     ssl_version=proto)
