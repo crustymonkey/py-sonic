@@ -212,7 +212,8 @@ class Connection(object):
         if res['status'] == 'ok':
             return True
         elif res['status'] == 'failed':
-            raise getExcByCode(res['error']['code'])
+            exc = getExcByCode(res['error']['code'])
+            raise exc(res['error']['message'])
         return False
 
     def getLicense(self):
