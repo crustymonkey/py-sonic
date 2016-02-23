@@ -20,6 +20,7 @@ from urllib import urlencode
 from .errors import *
 from pprint import pprint
 from cStringIO import StringIO
+from netrc import netrc
 import json, urllib2, httplib, logging, socket, ssl, sys
 
 API_VERSION = '1.13.0'
