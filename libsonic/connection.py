@@ -81,9 +81,9 @@ class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
         if (code in (301, 302, 303, 307) and m in ("GET", "HEAD")
             or code in (301, 302, 303) and m == "POST"):
             newurl = newurl.replace(' ', '%20')
-            newheaders = dict((k,v) for k,v in req.headers.items()
-                              if k.lower() not in ("content-length", "content-type")
-                             )
+            newheaders = dict((k, v) for k, v in req.headers.items()
+                if k.lower() not in ("content-length", "content-type")
+            )
             data = None
             if req.has_data():
                 data = req.get_data()
@@ -96,9 +96,9 @@ class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
             raise urllib2.HTTPError(req.get_full_url(), code, msg, headers, fp)
 
 class Connection(object):
-    def __init__(self, baseUrl, username, password, port=4040,
+    def __init__(self, baseUrl, username=None, password=None, port=4040,
             serverPath='/rest', appName='py-sonic', apiVersion=API_VERSION,
-            insecure=False):
+            insecure=False, useNetrc=None):
         """
         This will create a connection to your subsonic server
 
@@ -122,8 +122,12 @@ class Connection(object):
                             baseUrl = "https://mydomain.com"
                             port = 8080
                             serverPath = "/path/to/subsonic/rest"
-        username:str        The username to use for the connection
-        password:str        The password to use for the connection
+        username:str        The username to use for the connection.  This
+                            can be None if `useNetrc' is True (and you
+                            have a valid entry in your netrc file)
+        password:str        The password to use for the connection.  This
+                            can be None if `useNetrc' is True (and you
+                            have a valid entry in your netrc file)
         port:int            The port number to connect on.  The default for
                             unencrypted subsonic connections is 4040
         serverPath:str      The base resource path for the subsonic views.
@@ -148,11 +152,24 @@ class Connection(object):
                             version of Subsonic.
         insecure:bool       This will allow you to use self signed
                             certificates when connecting if set to True.
+        useNetrc:str|bool   You can either specify a specific netrc
+                            formatted file or True to use your default
+                            netrc file ($HOME/.netrc).
 
         """
         self._baseUrl = baseUrl
+        self._hostname = baseUrl.split('://')[1].strip()
         self._username = username
         self._rawPass = password
+
+        self._netrc = None
+        if useNetrc is not None:
+            self._process_netrc(useNetrc)
+        elif username is None or password is None:
+            raise CredentialError('You must specify either a username/password '
+                'combination or "useNetrc" must be either True or a string '
+                'representing a path to a netrc file')
+
         self._port = int(port)
         self._apiVersion = apiVersion
         self._appName = appName
@@ -2596,3 +2613,30 @@ class Connection(object):
                 if isinstance(item, (list, tuple, dict)):
                     return self._fixLastModified(item)
 
+    def _process_netrc(self, use_netrc):
+        """
+        The use_netrc var is either a boolean, which means we should use
+        the user's default netrc, or a string specifying a path to a
+        netrc formatted file
+
+        use_netrc:bool|str      Either set to True to use the user's default
+                                netrc file or a string specifying a specific
+                                netrc file to use
+        """
+        if not use_netrc:
+            raise CredentialError('useNetrc must be either a boolean "True" '
+                'or a string representing a path to a netrc file, '
+                'not {0}'.format(repr(use_netrc)))
+        if isinstance(use_netrc, bool) and use_netrc:
+            self._netrc = netrc()
+        else:
+            # This should be a string specifying a path to a netrc file
+            self._netrc = netrc(os.path.expanduser(use_netrc))
+        auth = self._netrc.authenticators(self._hostname)
+        if not auth:
+            raise CredentialError('No machine entry found for {0} in '
+                'your netrc file'.format(self._hostname))
+
+        # If we get here, we have credentials
+        self._username = auth[0]
+        self._rawPass = auth[2]
