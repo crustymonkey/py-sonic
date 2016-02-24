@@ -1,3 +1,11 @@
+## 0.5.0
+
+* Added support for using credentials via a netrc file
+
+## 0.4.1
+
+* Fixed SSL handling issues
+
 ## 0.4.0
 
 * Added missing 1.12.0 API items
