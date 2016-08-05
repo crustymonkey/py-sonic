@@ -15,13 +15,13 @@ You should have received a copy of the GNU General Public License
 along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
-from base64 import b64encode
 from urllib import urlencode
 from .errors import *
 from pprint import pprint
 from cStringIO import StringIO
 from netrc import netrc
-import json, urllib2, httplib, logging, socket, ssl, sys
+from hashlib import md5
+import json, urllib2, httplib, logging, socket, ssl, sys, os
 
 API_VERSION = '1.13.0'
 
@@ -2479,14 +2479,12 @@ class Connection(object):
     # Private internal methods
     #
     def _getOpener(self, username, passwd):
-        creds = b64encode('%s:%s' % (username, passwd))
         # Context is only relevent in >= python 2.7.9
         https_chain = HTTPSHandlerChain()
         if sys.version_info[:3] >= (2, 7, 9) and self._insecure:
             https_chain = HTTPSHandlerChain(
                 context=ssl._create_unverified_context())
         opener = urllib2.build_opener(PysHTTPRedirectHandler, https_chain)
-        opener.addheaders = [('Authorization', 'Basic %s' % creds)]
         return opener
 
     def _getQueryDict(self, d):
@@ -2498,12 +2496,26 @@ class Connection(object):
                 del d[k]
         return d
 
+    def _getBaseQdict(self):
+        salt = self._getSalt()
+        token = md5(self._rawPass + salt).hexdigest()
+        qdict = {
+            'f': 'json',
+            'v': self._apiVersion,
+            'c': self._appName,
+            'u': self._username,
+            's': salt,
+            't': token,
+        }
+
+        return qdict
+
     def _getRequest(self, viewName, query={}):
-        qstring = {'f': 'json', 'v': self._apiVersion, 'c': self._appName}
-        qstring.update(query)
+        qdict = self._getBaseQdict()
+        qdict.update(query)
         url = '%s:%d/%s/%s' % (self._baseUrl, self._port, self._serverPath,
             viewName)
-        req = urllib2.Request(url, urlencode(qstring))
+        req = urllib2.Request(url, urlencode(qdict))
         return req
 
     def _getRequestWithList(self, viewName, listName, alist, query={}):
@@ -2511,12 +2523,12 @@ class Connection(object):
         Like _getRequest, but allows appending a number of items with the
         same key (listName).  This bypasses the limitation of urlencode()
         """
-        qstring = {'f': 'json', 'v': self._apiVersion, 'c': self._appName}
-        qstring.update(query)
+        qdict = self._getBaseQdict()
+        qdict.update(query)
         url = '%s:%d/%s/%s' % (self._baseUrl, self._port, self._serverPath,
             viewName)
         data = StringIO()
-        data.write(urlencode(qstring))
+        data.write(urlencode(qdict))
         for i in alist:
             data.write('&%s' % urlencode({listName: i}))
         req = urllib2.Request(url, data.getvalue())
@@ -2532,12 +2544,12 @@ class Connection(object):
         listMap:dict        A mapping of listName to a list of entries
         query:dict          The normal query dict
         """
-        qstring = {'f': 'json', 'v': self._apiVersion, 'c': self._appName}
-        qstring.update(query)
+        qdict = self._getBaseQdict()
+        qdict.update(query)
         url = '%s:%d/%s/%s' % (self._baseUrl, self._port, self._serverPath,
             viewName)
         data = StringIO()
-        data.write(urlencode(qstring))
+        data.write(urlencode(qdict))
         for k, l in listMap.iteritems():
             for i in l:
                 data.write('&%s' % urlencode({k: i}))
@@ -2640,3 +2652,7 @@ class Connection(object):
         # If we get here, we have credentials
         self._username = auth[0]
         self._rawPass = auth[2]
+
+    def _getSalt(self, length=12):
+        salt = md5(os.urandom(100)).hexdigest()
+        return salt[:length]
