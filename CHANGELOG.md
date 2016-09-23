@@ -1,3 +1,11 @@
+## 0.6.0
+
+* Added API 1.14.0 support
+
+## 0.5.1
+
+* Added the ability to use a netrc file for credentials
+
 ## 0.5.0
 
 * Added support for using credentials via a netrc file
