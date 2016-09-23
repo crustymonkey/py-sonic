@@ -98,7 +98,7 @@ class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
 class Connection(object):
     def __init__(self, baseUrl, username=None, password=None, port=4040,
             serverPath='/rest', appName='py-sonic', apiVersion=API_VERSION,
-            insecure=False, useNetrc=None):
+            insecure=False, useNetrc=None, legacyAuth=False):
         """
         This will create a connection to your subsonic server
 
@@ -155,12 +155,13 @@ class Connection(object):
         useNetrc:str|bool   You can either specify a specific netrc
                             formatted file or True to use your default
                             netrc file ($HOME/.netrc).
-
+        legacyAuth:bool     Use pre-1.13.0 API version authentication
         """
         self._baseUrl = baseUrl
         self._hostname = baseUrl.split('://')[1].strip()
         self._username = username
         self._rawPass = password
+        self._legacyAuth = legacyAuth
 
         self._netrc = None
         if useNetrc is not None:
@@ -2575,16 +2576,22 @@ class Connection(object):
         return d
 
     def _getBaseQdict(self):
-        salt = self._getSalt()
-        token = md5(self._rawPass + salt).hexdigest()
         qdict = {
             'f': 'json',
             'v': self._apiVersion,
             'c': self._appName,
             'u': self._username,
-            's': salt,
-            't': token,
         }
+
+        if self._legacyAuth:
+            qdict['p'] = 'enc:%s' % self._hexEnc(self._rawPass)
+        else:
+            salt = self._getSalt()
+            token = md5(self._rawPass + salt).hexdigest()
+            qdict.update({
+                's': salt,
+                't': token,
+            })
 
         return qdict
 
