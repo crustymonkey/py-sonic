@@ -23,7 +23,7 @@ from netrc import netrc
 from hashlib import md5
 import json, urllib2, httplib, logging, socket, ssl, sys, os
 
-API_VERSION = '1.13.0'
+API_VERSION = '1.14.0'
 
 logger = logging.getLogger(__name__)
 
@@ -747,7 +747,7 @@ class Connection(object):
         return res
 
     def stream(self, sid, maxBitRate=0, tformat=None, timeOffset=None,
-            size=None, estimateContentLength=False):
+            size=None, estimateContentLength=False, converted=False):
         """
         since: 1.0.0
 
@@ -772,6 +772,12 @@ class Connection(object):
                                     the HTTP Content-Length header
                                     will be set to an estimated
                                     value for trancoded media
+        converted:bool  (since: 1.14.0) Only applicable to video streaming.
+                        Subsonic can optimize videos for streaming by
+                        converting them to MP4. If a conversion exists for
+                        the video in question, then setting this parameter
+                        to "true" will cause the converted video to be
+                        returned instead of the original.
 
         Returns the file-like object for reading or raises an exception
         on error
@@ -781,7 +787,8 @@ class Connection(object):
 
         q = self._getQueryDict({'id': sid, 'maxBitRate': maxBitRate,
             'format': tformat, 'timeOffset': timeOffset, 'size': size,
-            'estimateContentLength': estimateContentLength})
+            'estimateContentLength': estimateContentLength,
+            'converted': converted})
 
         req = self._getRequest(viewName, q)
         res = self._doBinReq(req)
@@ -2457,6 +2464,77 @@ class Connection(object):
         """
         methodName = 'expunge'
         return self._unsupportedAPIFunction(methodName)
+
+    def getVideoInfo(self, vid):
+        """
+        since 1.14.0
+
+        Returns details for a video, including information about available
+        audio tracks, subtitles (captions) and conversions.
+
+        vid:str     The video ID
+        """
+        methodName = 'getVideoInfo'
+        viewName = '%s.view' % methodName
+
+        q = {'id': vid}
+        req = self._getRequest(viewName, q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getAlbumInfo(self, aid):
+        """
+        since 1.14.0
+
+        Returns the album notes, image URLs, etc., using data from last.fm
+
+        aid:str     The album ID
+        """
+        methodName = 'getAlbumInfo'
+        viewName = '%s.view' % methodName
+
+        q = {'id': aid}
+        req = self._getRequest(viewName, q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getAlbumInfo2(self, aid):
+        """
+        since 1.14.0
+
+        Same as getAlbumInfo, but uses ID3 tags
+
+        aid:str     The album ID
+        """
+        methodName = 'getAlbumInfo2'
+        viewName = '%s.view' % methodName
+
+        q = {'id': aid}
+        req = self._getRequest(viewName, q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def getCaptions(self, vid, fmt=None):
+        """
+        since 1.14.0
+
+        Returns captions (subtitles) for a video.  Use getVideoInfo for a list
+        of captions.
+
+        vid:str         The ID of the video
+        fmt:str         Preferred captions format ("srt" or "vtt")
+        """
+        methodName = 'getCaptions'
+        viewName = '%s.view' % methodName
+
+        q = self._getQueryDict({'id': vid, 'format': fmt})
+        req = self._getRequest(viewName, q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
 
     def _unsupportedAPIFunction(self, methodName):
         """
