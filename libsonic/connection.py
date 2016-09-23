@@ -213,6 +213,11 @@ class Connection(object):
         self._insecure = insecure
     insecure = property(lambda s: s._insecure, setInsecure)
 
+    def setLegacyAuth(self, lauth):
+        self._legacyAuth = lauth
+    legacyAuth = property(lambda s: s._legacyAuth, setLegacyAuth)
+
+
     # API methods
     def ping(self):
         """
