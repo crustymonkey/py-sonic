@@ -2472,12 +2472,12 @@ class Connection(object):
         Returns details for a video, including information about available
         audio tracks, subtitles (captions) and conversions.
 
-        vid:str     The video ID
+        vid:int     The video ID
         """
         methodName = 'getVideoInfo'
         viewName = '%s.view' % methodName
 
-        q = {'id': vid}
+        q = {'id': int(vid)}
         req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -2489,12 +2489,12 @@ class Connection(object):
 
         Returns the album notes, image URLs, etc., using data from last.fm
 
-        aid:str     The album ID
+        aid:int     The album ID
         """
         methodName = 'getAlbumInfo'
         viewName = '%s.view' % methodName
 
-        q = {'id': aid}
+        q = {'id': int(aid)}
         req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -2506,12 +2506,12 @@ class Connection(object):
 
         Same as getAlbumInfo, but uses ID3 tags
 
-        aid:str     The album ID
+        aid:int     The album ID
         """
         methodName = 'getAlbumInfo2'
         viewName = '%s.view' % methodName
 
-        q = {'id': aid}
+        q = {'id': int(aid)}
         req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -2524,13 +2524,13 @@ class Connection(object):
         Returns captions (subtitles) for a video.  Use getVideoInfo for a list
         of captions.
 
-        vid:str         The ID of the video
+        vid:int         The ID of the video
         fmt:str         Preferred captions format ("srt" or "vtt")
         """
         methodName = 'getCaptions'
         viewName = '%s.view' % methodName
 
-        q = self._getQueryDict({'id': vid, 'format': fmt})
+        q = self._getQueryDict({'id': int(vid), 'format': fmt})
         req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
