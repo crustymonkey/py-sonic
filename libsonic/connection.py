@@ -98,7 +98,7 @@ class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
 class Connection(object):
     def __init__(self, baseUrl, username=None, password=None, port=4040,
             serverPath='/rest', appName='py-sonic', apiVersion=API_VERSION,
-            insecure=False, useNetrc=None, legacyAuth=False):
+            insecure=False, useNetrc=None, legacyAuth=False, useGET=False):
         """
         This will create a connection to your subsonic server
 
@@ -156,12 +156,16 @@ class Connection(object):
                             formatted file or True to use your default
                             netrc file ($HOME/.netrc).
         legacyAuth:bool     Use pre-1.13.0 API version authentication
+        useGET:bool         Use a GET request instead of the default POST
+                            request.  This is not recommended as request
+                            URLs can get very long with some API calls
         """
         self._baseUrl = baseUrl
         self._hostname = baseUrl.split('://')[1].strip()
         self._username = username
         self._rawPass = password
         self._legacyAuth = legacyAuth
+        self._useGET = useGET
 
         self._netrc = None
         if useNetrc is not None:
@@ -217,6 +221,9 @@ class Connection(object):
         self._legacyAuth = lauth
     legacyAuth = property(lambda s: s._legacyAuth, setLegacyAuth)
 
+    def setGET(self, get):
+        self._useGET = get
+    useGET = property(lambda s: s._useGET, setGET)
 
     # API methods
     def ping(self):
@@ -2606,6 +2613,11 @@ class Connection(object):
         url = '%s:%d/%s/%s' % (self._baseUrl, self._port, self._serverPath,
             viewName)
         req = urllib2.Request(url, urlencode(qdict))
+
+        if self._useGET:
+            url += '?%s' % urlencode(qdict)
+            req = urllib2.Request(url)
+
         return req
 
     def _getRequestWithList(self, viewName, listName, alist, query={}):
@@ -2622,6 +2634,11 @@ class Connection(object):
         for i in alist:
             data.write('&%s' % urlencode({listName: i}))
         req = urllib2.Request(url, data.getvalue())
+
+        if self._useGET:
+            url += '?%s' % data.getvalue()
+            req = urllib2.Request(url)
+
         return req
 
     def _getRequestWithLists(self, viewName, listMap, query={}):
@@ -2644,6 +2661,11 @@ class Connection(object):
             for i in l:
                 data.write('&%s' % urlencode({k: i}))
         req = urllib2.Request(url, data.getvalue())
+
+        if self._useGET:
+            url += '?%s' % data.getvalue()
+            req = urllib2.Request(url)
+
         return req
 
     def _doInfoReq(self, req):
