@@ -1,3 +1,7 @@
+## 0.6.1
+
+* Added `legacyAuth` option for pre-1.13.0 support
+
 ## 0.6.0
 
 * Added API 1.14.0 support
