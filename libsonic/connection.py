@@ -2620,7 +2620,6 @@ class Connection(object):
         return qdict
 
     def _getRequest(self, viewName, query={}):
-        import pdb; pdb.set_trace()
         qdict = self._getBaseQdict()
         qdict.update(query)
         url = '%s:%d/%s/%s' % (self._baseUrl, self._port, self._serverPath,
