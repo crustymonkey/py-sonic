@@ -1,3 +1,7 @@
+## 0.6.2
+
+* Added an option to use GET requests, instead of the default POST requests
+
 ## 0.6.1
 
 * Added `legacyAuth` option for pre-1.13.0 support
