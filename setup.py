@@ -17,8 +17,12 @@ You should have received a copy of the GNU General Public License
 along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
-from distutils.core import setup
+from setuptools import setup
 from libsonic import __version__ as version
+import os
+
+req_file = os.path.join(os.path.dirname(__file__), 'requirements.txt')
+requirements = [line for line in open(req_file) if line]
 
 setup(name='py-sonic',
     version=version,
@@ -32,6 +36,7 @@ setup(name='py-sonic',
         'information and have it returned in basic Python types.',
     packages=['libsonic'],
     package_dir={'libsonic': 'libsonic'},
+    install_requires=requirements,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: System Administrators',
