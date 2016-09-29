@@ -2618,7 +2618,7 @@ class Connection(object):
         qdict.update(query)
         url = '%s:%d/%s/%s' % (self._baseUrl, self._port, self._serverPath,
             viewName)
-        req = urllib.request.Request(url, urlencode(qdict))
+        req = urllib.request.Request(url, urlencode(qdict).encode('utf-8'))
         return req
 
     def _getRequestWithList(self, viewName, listName, alist, query={}):
@@ -2634,7 +2634,7 @@ class Connection(object):
         data.write(urlencode(qdict))
         for i in alist:
             data.write('&%s' % urlencode({listName: i}))
-        req = urllib.request.Request(url, data.getvalue())
+        req = urllib.request.Request(url, data.getvalue().encode('utf-8'))
         return req
 
     def _getRequestWithLists(self, viewName, listMap, query={}):
@@ -2656,13 +2656,13 @@ class Connection(object):
         for k, l in listMap.items():
             for i in l:
                 data.write('&%s' % urlencode({k: i}))
-        req = urllib.request.Request(url, data.getvalue())
+        req = urllib.request.Request(url, data.getvalue().encode('utf-8'))
         return req
 
     def _doInfoReq(self, req):
         # Returns a parsed dictionary version of the result
         res = self._opener.open(req)
-        dres = json.loads(res.read())
+        dres = json.loads(res.read().decode('utf-8'))
         return dres['subsonic-response']
 
     def _doBinReq(self, req):
