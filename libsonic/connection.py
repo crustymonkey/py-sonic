@@ -15,19 +15,31 @@ You should have received a copy of the GNU General Public License
 along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
-from urllib import urlencode
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 from .errors import *
-from pprint import pprint
-from cStringIO import StringIO
 from netrc import netrc
 from hashlib import md5
-import json, urllib2, httplib, logging, socket, ssl, sys, os
+from six.moves import urllib
+from six.moves import http_client
+from six.moves.urllib.parse import urlencode
+from six.moves import cStringIO as StringIO
+
+import json
+import logging
+import socket
+import ssl
+import sys
+import os
 
 API_VERSION = '1.14.0'
 
 logger = logging.getLogger(__name__)
 
-class HTTPSConnectionChain(httplib.HTTPSConnection):
+class HTTPSConnectionChain(http_client.HTTPSConnection):
     _preferred_ssl_protos = sorted([ p for p in dir(ssl)
         if p.startswith('PROTOCOL_') ], reverse=True)
     _ssl_working_proto = None
@@ -64,14 +76,14 @@ class HTTPSConnectionChain(httplib.HTTPSConnection):
                 break
 
 
-class HTTPSHandlerChain(urllib2.HTTPSHandler):
+class HTTPSHandlerChain(urllib.request.HTTPSHandler):
     def https_open(self, req):
         return self.do_open(HTTPSConnectionChain, req)
 
 # install opener
-urllib2.install_opener(urllib2.build_opener(HTTPSHandlerChain()))
+urllib.request.install_opener(urllib.request.build_opener(HTTPSHandlerChain()))
 
-class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
+class PysHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
     """
     This class is used to override the default behavior of the
     HTTPRedirectHandler, which does *not* redirect POST data
@@ -81,19 +93,19 @@ class PysHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
         if (code in (301, 302, 303, 307) and m in ("GET", "HEAD")
             or code in (301, 302, 303) and m == "POST"):
             newurl = newurl.replace(' ', '%20')
-            newheaders = dict((k, v) for k, v in req.headers.items()
+            newheaders = dict((k, v) for k, v in list(req.headers.items())
                 if k.lower() not in ("content-length", "content-type")
             )
             data = None
             if req.has_data():
                 data = req.get_data()
-            return urllib2.Request(newurl,
+            return urllib.request.Request(newurl,
                            data=data,
                            headers=newheaders,
                            origin_req_host=req.get_origin_req_host(),
                            unverifiable=True)
         else:
-            raise urllib2.HTTPError(req.get_full_url(), code, msg, headers, fp)
+            raise urllib.error.HTTPError(req.get_full_url(), code, msg, headers, fp)
 
 class Connection(object):
     def __init__(self, baseUrl, username=None, password=None, port=4040,
@@ -1953,7 +1965,7 @@ class Connection(object):
         req = self._getRequest(viewName, q)
         try:
             res = self._doBinReq(req)
-        except urllib2.HTTPError:
+        except urllib.error.HTTPError:
             # Avatar is not set/does not exist, return None
             return None
         if isinstance(res, dict):
@@ -2105,7 +2117,7 @@ class Connection(object):
         req = self._getRequest(viewName, q)
         try:
             res = self._doBinReq(req)
-        except urllib2.HTTPError:
+        except urllib.error.HTTPError:
             # Avatar is not set/does not exist, return None
             return None
         if isinstance(res, dict):
@@ -2554,7 +2566,7 @@ class Connection(object):
 
         url = '%s:%d/%s/%s?%s' % (self._baseUrl, self._port,
             self._separateServerPath(), viewName, methodName)
-        req = urllib2.Request(url)
+        req = urllib.request.Request(url)
         res = self._opener.open(req)
         res_msg = res.msg.lower()
         return res_msg == 'ok'
@@ -2568,14 +2580,14 @@ class Connection(object):
         if sys.version_info[:3] >= (2, 7, 9) and self._insecure:
             https_chain = HTTPSHandlerChain(
                 context=ssl._create_unverified_context())
-        opener = urllib2.build_opener(PysHTTPRedirectHandler, https_chain)
+        opener = urllib.request.build_opener(PysHTTPRedirectHandler, https_chain)
         return opener
 
     def _getQueryDict(self, d):
         """
         Given a dictionary, it cleans out all the values set to None
         """
-        for k, v in d.items():
+        for k, v in list(d.items()):
             if v is None:
                 del d[k]
         return d
@@ -2592,7 +2604,7 @@ class Connection(object):
             qdict['p'] = 'enc:%s' % self._hexEnc(self._rawPass)
         else:
             salt = self._getSalt()
-            token = md5(self._rawPass + salt).hexdigest()
+            token = md5((self._rawPass + salt).encode('utf-8')).hexdigest()
             qdict.update({
                 's': salt,
                 't': token,
@@ -2601,11 +2613,12 @@ class Connection(object):
         return qdict
 
     def _getRequest(self, viewName, query={}):
+        import pdb; pdb.set_trace()
         qdict = self._getBaseQdict()
         qdict.update(query)
         url = '%s:%d/%s/%s' % (self._baseUrl, self._port, self._serverPath,
             viewName)
-        req = urllib2.Request(url, urlencode(qdict))
+        req = urllib.request.Request(url, urlencode(qdict))
         return req
 
     def _getRequestWithList(self, viewName, listName, alist, query={}):
@@ -2621,7 +2634,7 @@ class Connection(object):
         data.write(urlencode(qdict))
         for i in alist:
             data.write('&%s' % urlencode({listName: i}))
-        req = urllib2.Request(url, data.getvalue())
+        req = urllib.request.Request(url, data.getvalue())
         return req
 
     def _getRequestWithLists(self, viewName, listMap, query={}):
@@ -2640,10 +2653,10 @@ class Connection(object):
             viewName)
         data = StringIO()
         data.write(urlencode(qdict))
-        for k, l in listMap.iteritems():
+        for k, l in listMap.items():
             for i in l:
                 data.write('&%s' % urlencode({k: i}))
-        req = urllib2.Request(url, data.getvalue())
+        req = urllib.request.Request(url, data.getvalue())
         return req
 
     def _doInfoReq(self, req):
@@ -2694,7 +2707,7 @@ class Connection(object):
         """
         separate REST portion of URL from base server path.
         """
-        return urllib2.splithost(self._serverPath)[1].split('/')[0]
+        return urllib.parse.splithost(self._serverPath)[1].split('/')[0]
 
     def _fixLastModified(self, data):
         """
@@ -2704,9 +2717,9 @@ class Connection(object):
         of SECONDS since the unix epoch.  JAVA SUCKS!
         """
         if isinstance(data, dict):
-            for k, v in data.items():
+            for k, v in list(data.items()):
                 if k == 'lastModified':
-                    data[k] = long(v) / 1000.0
+                    data[k] = int(v) / 1000.0
                     return
                 elif isinstance(v, (tuple, list, dict)):
                     return self._fixLastModified(v)
