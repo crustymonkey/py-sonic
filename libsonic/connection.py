@@ -2646,7 +2646,7 @@ class Connection(object):
         data.write(urlencode(qdict))
         for i in alist:
             data.write('&%s' % urlencode({listName: i}))
-        req = urllib2.Request(url, data.getvalue().encode('utf-8'))
+        req = urllib.request.Request(url, data.getvalue().encode('utf-8'))
 
         if self._useGET:
             url += '?%s' % data.getvalue()
@@ -2684,7 +2684,7 @@ class Connection(object):
     def _doInfoReq(self, req):
         # Returns a parsed dictionary version of the result
         res = self._opener.open(req)
-        dres = json.loads(res.read())
+        dres = json.loads(res.read().decode('utf-8'))
         return dres['subsonic-response']
 
     def _doBinReq(self, req):
