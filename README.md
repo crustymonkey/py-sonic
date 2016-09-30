@@ -14,10 +14,9 @@ You can also install directly using *pip* or *easy_install*
 
 ## PYTHON 3 ##
 
-I've added experimental support for Python 3.  This is not fully tested, but I
-do encourage people to fork the repository and test off the "python3" branch
-and issue pull requests.  If you don't want to go through that trouble, bug
-reports are always welcome too!
+The library is now usable for both Python 2 and 3!  A requirement for the
+"six" module was added to support this, but this otherwise works for both
+2 and 3.
 
 ## USAGE ##
 

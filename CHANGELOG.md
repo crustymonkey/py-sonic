@@ -1,3 +1,8 @@
+## 0.7.0
+
+* py-sonic should now python 2/3 compatible.  Unfortunately, this adds the requirement of the "six" module for this compatibility.  Please file a bug if you run into issues with either python 2 or 3.
+* Cut over to setuptools from disttools for pip requirement support
+
 ## 0.6.2
 
 * Added an option to use GET requests, instead of the default POST requests
