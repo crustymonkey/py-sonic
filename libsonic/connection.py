@@ -2688,7 +2688,12 @@ class Connection(object):
 
     def _doBinReq(self, req):
         res = self._opener.open(req)
-        contType = res.info().getheader('Content-Type')
+        info = res.info()
+        if hasattr(info, 'getheader'):
+            contType = info.getheader('Content-Type')
+        else:
+            contType = info.get('Content-Type')
+
         if contType:
             if contType.startswith('text/html') or \
                     contType.startswith('application/json'):
