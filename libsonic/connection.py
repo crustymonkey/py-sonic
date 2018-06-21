@@ -15,18 +15,14 @@ You should have received a copy of the GNU General Public License
 along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
-from .errors import *
+from libsonic.errors import *
 from netrc import netrc
 from hashlib import md5
-from six.moves import urllib
-from six.moves import http_client
-from six.moves.urllib.parse import urlencode
-from six.moves import cStringIO as StringIO
+import urllib.request
+import urllib.error
+from http import client as http_client
+from urllib.parse import urlencode
+from io import StringIO
 
 import json
 import logging
@@ -105,7 +101,13 @@ class PysHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
                            origin_req_host=req.get_origin_req_host(),
                            unverifiable=True)
         else:
-            raise urllib.error.HTTPError(req.get_full_url(), code, msg, headers, fp)
+            raise urllib.error.HTTPError(
+                req.get_full_url(),
+                code,
+                msg,
+                headers,
+                fp,
+            )
 
 class Connection(object):
     def __init__(self, baseUrl, username=None, password=None, port=4040,
@@ -2587,7 +2589,10 @@ class Connection(object):
         if sys.version_info[:3] >= (2, 7, 9) and self._insecure:
             https_chain = HTTPSHandlerChain(
                 context=ssl._create_unverified_context())
-        opener = urllib.request.build_opener(PysHTTPRedirectHandler, https_chain)
+        opener = urllib.request.build_opener(
+            PysHTTPRedirectHandler,
+            https_chain,
+        )
         return opener
 
     def _getQueryDict(self, d):
@@ -2628,7 +2633,7 @@ class Connection(object):
 
         if self._useGET:
             url += '?%s' % urlencode(qdict)
-            req = urllib2.Request(url)
+            req = urllib.request.Request(url)
 
         return req
 
