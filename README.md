@@ -1,5 +1,8 @@
 # py-sonic #
 
+## Python 2 is dead ##
+I'm discontinuing support for Python 2 at this point.  I'm no longer supporting the six hacks.  Everything > 0.6.2 will be Python 3 only.
+
 ## INSTALL ##
 
 Installation is fairly simple.  Just do the standard install as root:
@@ -11,12 +14,6 @@ Installation is fairly simple.  Just do the standard install as root:
 You can also install directly using *pip* or *easy_install*
 
     pip install py-sonic
-
-## PYTHON 3 ##
-
-The library is now usable for both Python 2 and 3!  A requirement for the
-"six" module was added to support this, but this otherwise works for both
-2 and 3.
 
 ## USAGE ##
 
