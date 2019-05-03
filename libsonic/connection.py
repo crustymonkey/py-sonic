@@ -285,6 +285,52 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
+    def getScanStatus(self):
+        """
+        since: 1.15.0
+
+        returns the current status for media library scanning.
+        takes no extra parameters.
+
+        returns a dict like the following:
+
+        {'status': 'ok', 'version': '1.15.0',
+        'scanstatus': {'scanning': true, 'count': 4680}}
+
+        'count' is the total number of items to be scanned
+        """
+        methodName = 'getScanStatus'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def startScan(self):
+        """
+        since: 1.15.0
+
+        Initiates a rescan of the media libraries.
+        Takes no extra parameters.
+
+        returns a dict like the following:
+
+        {'status': 'ok', 'version': '1.15.0',
+        'scanstatus': {'scanning': true, 'count': 0}}
+
+        'scanning' changes to false when a scan is complete
+        'count' starts a 0 and ends at the total number of items scanned
+
+        """
+        methodName = 'startScan'
+        viewName = '%s.view' % methodName
+
+        req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
     def getMusicFolders(self):
         """
         since: 1.0.0
