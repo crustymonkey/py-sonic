@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 This file is part of py-sonic.
@@ -37,6 +37,7 @@ setup(name='py-sonic',
     packages=['libsonic'],
     package_dir={'libsonic': 'libsonic'},
     install_requires=requirements,
+    python_requires='>=3',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: System Administrators',
