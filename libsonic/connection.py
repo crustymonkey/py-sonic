@@ -31,7 +31,7 @@ import ssl
 import sys
 import os
 
-API_VERSION = '1.14.0'
+API_VERSION = '1.16.1'
 
 logger = logging.getLogger(__name__)
 
@@ -2282,6 +2282,70 @@ class Connection(object):
         viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def createInternetRadioStation(self, streamUrl, name, homepageUrl=None):
+        """
+        since 1.16.0
+
+        Create an internet radio station
+
+        streamUrl:str   The stream URL for the station
+        name:str        The user-defined name for the station
+        homepageUrl:str The homepage URL for the station
+        """
+        methodName = 'createInternetRadioStation'
+        viewName = '{}.view'.format(methodName)
+
+        q = self._getQueryDict({
+            'streamUrl': streamUrl, 'name': name, 'homepageUrl': homepageUrl})
+
+        req = self._getRequest(viewName, q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def updateInternetRadioStation(self, iid, streamUrl, name,
+            homepageUrl=None):
+        """
+        since 1.16.0
+
+        Create an internet radio station
+
+        iid:str         The ID for the station
+        streamUrl:str   The stream URL for the station
+        name:str        The user-defined name for the station
+        homepageUrl:str The homepage URL for the station
+        """
+        methodName = 'updateInternetRadioStation'
+        viewName = '{}.view'.format(methodName)
+
+        q = self._getQueryDict({
+            'id': iid, 'streamUrl': streamUrl, 'name': name,
+            'homepageUrl': homepageUrl,
+        })
+
+        req = self._getRequest(viewName, q)
+        res = self._doInfoReq(req)
+        self._checkStatus(res)
+        return res
+
+    def deleteInternetRadioStation(self, iid):
+        """
+        since 1.16.0
+
+        Create an internet radio station
+
+        iid:str         The ID for the station
+        """
+        methodName = 'deleteInternetRadioStation'
+        viewName = '{}.view'.format(methodName)
+
+        q = {'id': iid}
+
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
