@@ -404,7 +404,7 @@ class Connection(object):
                                 artists for the given folder ID from
                                 the getMusicFolders call
         ifModifiedSince:int     If specified, return a result if the artist
-                                collection has changed since the given 
+                                collection has changed since the given
                                 unix timestamp
 
         Returns a dict like the following:
@@ -1040,7 +1040,7 @@ class Connection(object):
             streamRole=True, jukeboxRole=False, downloadRole=False,
             uploadRole=False, playlistRole=False, coverArtRole=False,
             commentRole=False, podcastRole=False, shareRole=False,
-            musicFolderId=None):
+            videoConversionRole=False, musicFolderId=None):
         """
         since: 1.1.0
 
@@ -1071,6 +1071,7 @@ class Connection(object):
             'uploadRole': uploadRole, 'playlistRole': playlistRole,
             'coverArtRole': coverArtRole, 'commentRole': commentRole,
             'podcastRole': podcastRole, 'shareRole': shareRole,
+            'videoConversionRole': videoConversionRole,
             'musicFolderId': musicFolderId
         })
 
@@ -1084,7 +1085,7 @@ class Connection(object):
             streamRole=True, jukeboxRole=False, downloadRole=False,
             uploadRole=False, playlistRole=False, coverArtRole=False,
             commentRole=False, podcastRole=False, shareRole=False,
-            musicFolderId=None, maxBitRate=0):
+            videoConversionRole=False, musicFolderId=None, maxBitRate=0):
         """
         since 1.10.1
 
@@ -1116,6 +1117,7 @@ class Connection(object):
             'uploadRole': uploadRole, 'playlistRole': playlistRole,
             'coverArtRole': coverArtRole, 'commentRole': commentRole,
             'podcastRole': podcastRole, 'shareRole': shareRole,
+            'videoConversionRole': videoConversionRole,
             'musicFolderId': musicFolderId, 'maxBitRate': maxBitRate
         })
         req = self._getRequest(viewName, q)
@@ -2436,10 +2438,10 @@ class Connection(object):
         position:int        The position, in milliseconds, within the current
                             playing song
 
-        Saves the state of the play queue for this user. This includes 
-        the tracks in the play queue, the currently playing track, and 
-        the position within this track. Typically used to allow a user to 
-        move between different clients/apps while retaining the same play 
+        Saves the state of the play queue for this user. This includes
+        the tracks in the play queue, the currently playing track, and
+        the position within this track. Typically used to allow a user to
+        move between different clients/apps while retaining the same play
         queue (for instance when listening to an audio book).
         """
         methodName = 'savePlayQueue'
@@ -2448,7 +2450,7 @@ class Connection(object):
             qids = [qids]
 
         q = self._getQueryDict({'current': current, 'position': position})
-        
+
         req = self._getRequestWithLists(viewName, {'id': qids}, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -2458,16 +2460,16 @@ class Connection(object):
         """
         since 1.12.0
 
-        Returns the state of the play queue for this user (as set by 
-        savePlayQueue). This includes the tracks in the play queue, 
-        the currently playing track, and the position within this track. 
-        Typically used to allow a user to move between different 
-        clients/apps while retaining the same play queue (for instance 
+        Returns the state of the play queue for this user (as set by
+        savePlayQueue). This includes the tracks in the play queue,
+        the currently playing track, and the position within this track.
+        Typically used to allow a user to move between different
+        clients/apps while retaining the same play queue (for instance
         when listening to an audio book).
         """
         methodName = 'getPlayQueue'
         viewName = '%s.view' % methodName
-        
+
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -2484,9 +2486,9 @@ class Connection(object):
         """
         methodName = 'getTopSongs'
         viewName = '%s.view' % methodName
-        
+
         q = {'artist': artist, 'count': count}
-        
+
         req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -2502,9 +2504,9 @@ class Connection(object):
         """
         methodName = 'getNewestPodcasts'
         viewName = '%s.view' % methodName
-        
+
         q = {'count': count}
-        
+
         req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
