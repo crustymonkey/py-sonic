@@ -2127,7 +2127,7 @@ class Connection(object):
         musicFolderId:int   Only return results from the music folder
                             with the given ID. See getMusicFolders
         """
-        methodName = 'getGenres'
+        methodName = 'getSongsByGenre'
         viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'genre': genre,
