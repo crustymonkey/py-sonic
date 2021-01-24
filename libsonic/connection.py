@@ -36,10 +36,6 @@ API_VERSION = '1.16.1'
 logger = logging.getLogger(__name__)
 
 class HTTPSConnectionChain(http_client.HTTPSConnection):
-    _preferred_ssl_protos = sorted([ p for p in dir(ssl)
-        if p.startswith('PROTOCOL_') ], reverse=True)
-    _ssl_working_proto = None
-
     def _create_sock(self):
         sock = socket.create_connection((self.host, self.port), self.timeout)
         if self._tunnel_host:
@@ -48,29 +44,12 @@ class HTTPSConnectionChain(http_client.HTTPSConnection):
         return sock
 
     def connect(self):
-        if self._ssl_working_proto is not None:
-            # If we have a working proto, let's use that straight away
-            logger.debug("Using known working proto: '%s'",
-                         self._ssl_working_proto)
-            sock = self._create_sock()
-            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
-                ssl_version=self._ssl_working_proto)
-            return
-
-        # Try connecting via the different SSL protos in preference order
-        for proto_name in self._preferred_ssl_protos:
-            sock = self._create_sock()
-            proto = getattr(ssl, proto_name, None)
-            try:
-                self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
-                    ssl_version=proto)
-            except:
-                sock.close()
-            else:
-                # Cache the working ssl version
-                HTTPSConnectionChain._ssl_working_proto = proto
-                break
-
+        sock = self._create_sock()
+        try:
+            self.sock = ssl.create_default_context().wrap_socket(sock,
+                server_hostname=self.host)
+        except:
+            sock.close()
 
 class HTTPSHandlerChain(urllib.request.HTTPSHandler):
     def https_open(self, req):
