@@ -72,12 +72,12 @@ class PysHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
                 if k.lower() not in ("content-length", "content-type")
             )
             data = None
-            if req.has_data():
-                data = req.get_data()
+            if req.data:
+                data = req.data
             return urllib.request.Request(newurl,
                            data=data,
                            headers=newheaders,
-                           origin_req_host=req.get_origin_req_host(),
+                           origin_req_host=req.origin_req_host,
                            unverifiable=True)
         else:
             raise urllib.error.HTTPError(
