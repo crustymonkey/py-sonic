@@ -226,7 +226,7 @@ class Connection(object):
         Returns a boolean True if the server is alive, False otherwise
         """
         methodName = 'ping'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         req = self._getRequest(viewName)
         try:
@@ -2147,7 +2147,7 @@ class Connection(object):
         Returns the raw m3u8 file as a string
         """
         methodName = 'hls'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = self._getQueryDict({'id': mid, 'bitrate': bitrate})
         req = self._getRequestName, q)
@@ -2168,7 +2168,7 @@ class Connection(object):
         must be authorized for Podcast administration
         """
         methodName = 'refreshPodcasts'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         req = self._getRequestName)
         res = self._doInfoReq(req)
@@ -2185,7 +2185,7 @@ class Connection(object):
         url:str     The URL of the Podcast to add
         """
         methodName = 'createPodcastChannel'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'url': url}
 
@@ -2204,7 +2204,7 @@ class Connection(object):
         pid:str         The ID of the Podcast channel to delete
         """
         methodName = 'deletePodcastChannel'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'id': pid}
 
@@ -2223,7 +2223,7 @@ class Connection(object):
         pid:str         The ID of the Podcast episode to delete
         """
         methodName = 'deletePodcastEpisode'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'id': pid}
 
@@ -2242,7 +2242,7 @@ class Connection(object):
         pid:str         The ID of the Podcast episode to download
         """
         methodName = 'downloadPodcastEpisode'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'id': pid}
 
@@ -2258,7 +2258,7 @@ class Connection(object):
         Returns all internet radio stations
         """
         methodName = 'getInternetRadioStations'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         req = self._getRequestName)
         res = self._doInfoReq(req)
@@ -2276,7 +2276,7 @@ class Connection(object):
         homepageUrl:str The homepage URL for the station
         """
         methodName = 'createInternetRadioStation'
-       Name = '{}'.format(methodName)
+        viewName = '{}'.format(methodName)
 
         q = self._getQueryDict({
             'streamUrl': streamUrl, 'name': name, 'homepageUrl': homepageUrl})
@@ -2299,7 +2299,7 @@ class Connection(object):
         homepageUrl:str The homepage URL for the station
         """
         methodName = 'updateInternetRadioStation'
-       Name = '{}'.format(methodName)
+        viewName = '{}'.format(methodName)
 
         q = self._getQueryDict({
             'id': iid, 'streamUrl': streamUrl, 'name': name,
@@ -2320,7 +2320,7 @@ class Connection(object):
         iid:str         The ID for the station
         """
         methodName = 'deleteInternetRadioStation'
-       Name = '{}'.format(methodName)
+        viewName = '{}'.format(methodName)
 
         q = {'id': iid}
 
@@ -2337,7 +2337,7 @@ class Connection(object):
         within a media file
         """
         methodName = 'getBookmarks'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         req = self._getRequestName)
         res = self._doInfoReq(req)
@@ -2357,7 +2357,7 @@ class Connection(object):
         comment:str     A user-defined comment
         """
         methodName = 'createBookmark'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = self._getQueryDict({'id': mid, 'position': position,
             'comment': comment})
@@ -2377,7 +2377,7 @@ class Connection(object):
                     Other users' bookmarks are not affected
         """
         methodName = 'deleteBookmark'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'id': mid}
 
@@ -2399,7 +2399,7 @@ class Connection(object):
                                 present in the media library
         """
         methodName = 'getArtistInfo'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'id': aid, 'count': count,
             'includeNotPresent': includeNotPresent}
@@ -2421,7 +2421,7 @@ class Connection(object):
                                 present in the media library
         """
         methodName = 'getArtistInfo2'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'id': aid, 'count': count,
             'includeNotPresent': includeNotPresent}
@@ -2443,7 +2443,7 @@ class Connection(object):
         count:int   Max number of songs to return
         """
         methodName = 'getSimilarSongs'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'id': iid, 'count': count}
 
@@ -2463,7 +2463,7 @@ class Connection(object):
         count:int   Max number of songs to return
         """
         methodName = 'getSimilarSongs2'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'id': iid, 'count': count}
 
@@ -2488,7 +2488,7 @@ class Connection(object):
         queue (for instance when listening to an audio book).
         """
         methodName = 'savePlayQueue'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
         if not isinstance(qids, (tuple, list)):
             qids = [qids]
 
@@ -2511,7 +2511,7 @@ class Connection(object):
         when listening to an audio book).
         """
         methodName = 'getPlayQueue'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         req = self._getRequestName)
         res = self._doInfoReq(req)
@@ -2528,7 +2528,7 @@ class Connection(object):
         count:int       The number of songs to return
         """
         methodName = 'getTopSongs'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'artist': artist, 'count': count}
 
@@ -2546,7 +2546,7 @@ class Connection(object):
         count:int       The number of episodes to return
         """
         methodName = 'getNewestPodcasts'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'count': count}
 
@@ -2593,7 +2593,7 @@ class Connection(object):
         vid:int     The video ID
         """
         methodName = 'getVideoInfo'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'id': int(vid)}
         req = self._getRequestName, q)
@@ -2610,7 +2610,7 @@ class Connection(object):
         aid:int     The album ID
         """
         methodName = 'getAlbumInfo'
-       Name = '%s' % methodName
+        viewName = '%s' % methodName
 
         q = {'id': int(aid)}
         req = self._getRequest(viewName, q)
