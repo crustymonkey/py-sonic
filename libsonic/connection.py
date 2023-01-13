@@ -2150,7 +2150,7 @@ class Connection(object):
         viewName = '%s' % methodName
 
         q = self._getQueryDict({'id': mid, 'bitrate': bitrate})
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         try:
             res = self._doBinReq(req)
         except urllib.error.HTTPError:
@@ -2170,7 +2170,7 @@ class Connection(object):
         methodName = 'refreshPodcasts'
         viewName = '%s' % methodName
 
-        req = self._getRequestName)
+        req = self._getRequest(viewName)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2189,7 +2189,7 @@ class Connection(object):
 
         q = {'url': url}
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2208,7 +2208,7 @@ class Connection(object):
 
         q = {'id': pid}
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2227,7 +2227,7 @@ class Connection(object):
 
         q = {'id': pid}
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2246,7 +2246,7 @@ class Connection(object):
 
         q = {'id': pid}
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2260,7 +2260,7 @@ class Connection(object):
         methodName = 'getInternetRadioStations'
         viewName = '%s' % methodName
 
-        req = self._getRequestName)
+        req = self._getRequest(viewName)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2281,7 +2281,7 @@ class Connection(object):
         q = self._getQueryDict({
             'streamUrl': streamUrl, 'name': name, 'homepageUrl': homepageUrl})
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2306,7 +2306,7 @@ class Connection(object):
             'homepageUrl': homepageUrl,
         })
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2324,7 +2324,7 @@ class Connection(object):
 
         q = {'id': iid}
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2339,7 +2339,7 @@ class Connection(object):
         methodName = 'getBookmarks'
         viewName = '%s' % methodName
 
-        req = self._getRequestName)
+        req = self._getRequest(viewName)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2362,7 +2362,7 @@ class Connection(object):
         q = self._getQueryDict({'id': mid, 'position': position,
             'comment': comment})
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2381,7 +2381,7 @@ class Connection(object):
 
         q = {'id': mid}
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2404,7 +2404,7 @@ class Connection(object):
         q = {'id': aid, 'count': count,
             'includeNotPresent': includeNotPresent}
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2426,7 +2426,7 @@ class Connection(object):
         q = {'id': aid, 'count': count,
             'includeNotPresent': includeNotPresent}
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2447,7 +2447,7 @@ class Connection(object):
 
         q = {'id': iid, 'count': count}
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2467,7 +2467,7 @@ class Connection(object):
 
         q = {'id': iid, 'count': count}
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2494,7 +2494,7 @@ class Connection(object):
 
         q = self._getQueryDict({'current': current, 'position': position})
 
-        req = self._getRequestWithListsName, {'id': qids}, q)
+        req = self._getRequestWithLists(viewName, {'id': qids}, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2513,7 +2513,7 @@ class Connection(object):
         methodName = 'getPlayQueue'
         viewName = '%s' % methodName
 
-        req = self._getRequestName)
+        req = self._getRequest(viewName)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2532,7 +2532,7 @@ class Connection(object):
 
         q = {'artist': artist, 'count': count}
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2550,7 +2550,7 @@ class Connection(object):
 
         q = {'count': count}
 
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
@@ -2596,7 +2596,7 @@ class Connection(object):
         viewName = '%s' % methodName
 
         q = {'id': int(vid)}
-        req = self._getRequestName, q)
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
