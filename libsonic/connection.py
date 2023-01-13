@@ -35,59 +35,6 @@ API_VERSION = '1.16.1'
 
 logger = logging.getLogger(__name__)
 
-class HTTPSConnectionChain(http_client.HTTPSConnection):
-    def _create_sock(self):
-        sock = socket.create_connection((self.host, self.port), self.timeout)
-        if self._tunnel_host:
-            self.sock = sock
-            self._tunnel()
-        return sock
-
-    def connect(self):
-        sock = self._create_sock()
-        try:
-            self.sock = ssl.create_default_context().wrap_socket(sock,
-                server_hostname=self.host)
-        except:
-            sock.close()
-
-class HTTPSHandlerChain(urllib.request.HTTPSHandler):
-    def https_open(self, req):
-        return self.do_open(HTTPSConnectionChain, req)
-
-# install opener
-urllib.request.install_opener(urllib.request.build_opener(HTTPSHandlerChain()))
-
-class PysHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
-    """
-    This class is used to override the default behavior of the
-    HTTPRedirectHandler, which does *not* redirect POST data
-    """
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        m = req.get_method()
-        if (code in (301, 302, 303, 307) and m in ("GET", "HEAD")
-            or code in (301, 302, 303) and m == "POST"):
-            newurl = newurl.replace(' ', '%20')
-            newheaders = dict((k, v) for k, v in list(req.headers.items())
-                if k.lower() not in ("content-length", "content-type")
-            )
-            data = None
-            if req.data:
-                data = req.data
-            return urllib.request.Request(newurl,
-                           data=data,
-                           headers=newheaders,
-                           origin_req_host=req.origin_req_host,
-                           unverifiable=True)
-        else:
-            raise urllib.error.HTTPError(
-                req.get_full_url(),
-                code,
-                msg,
-                headers,
-                fp,
-            )
-
 class Connection(object):
     def __init__(self, baseUrl, username=None, password=None, port=4040,
             serverPath='/rest', appName='py-sonic', apiVersion=API_VERSION,
@@ -2601,16 +2548,7 @@ class Connection(object):
     # Private internal methods
     #
     def _getOpener(self, username, passwd):
-        # Context is only relevent in >= python 2.7.9
-        https_chain = HTTPSHandlerChain()
-        if sys.version_info[:3] >= (2, 7, 9) and self._insecure:
-            https_chain = HTTPSHandlerChain(
-                context=ssl._create_unverified_context())
-        opener = urllib.request.build_opener(
-            PysHTTPRedirectHandler,
-            https_chain,
-        )
-        return opener
+        return urllib.request.build_opener()
 
     def _getQueryDict(self, d):
         """
