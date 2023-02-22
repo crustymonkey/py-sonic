@@ -172,7 +172,8 @@ class Connection(object):
 
         Returns a boolean True if the server is alive, False otherwise
         """
-        viewName = 'ping'
+        methodName = 'ping'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         try:
@@ -202,7 +203,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getLicense'
+        methodName = 'getLicense'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -223,7 +225,8 @@ class Connection(object):
 
         'count' is the total number of items to be scanned
         """
-        viewName = 'getScanStatus'
+        methodName = 'getScanStatus'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -246,7 +249,8 @@ class Connection(object):
         'count' starts a 0 and ends at the total number of items scanned
 
         """
-        viewName = 'startScan'
+        methodName = 'startScan'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -268,7 +272,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getMusicFolders'
+        methodName = 'getMusicFolders'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -307,7 +312,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getNowPlaying'
+        methodName = 'getNowPlaying'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -344,7 +350,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getIndexes'
+        methodName = 'getIndexes'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'musicFolderId': musicFolderId,
             'ifModifiedSince': self._ts2milli(ifModifiedSince)})
@@ -410,7 +417,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getMusicDirectory'
+        methodName = 'getMusicDirectory'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName, {'id': mid})
         res = self._doInfoReq(req)
@@ -438,7 +446,8 @@ class Connection(object):
         if artist == album == title == any == None:
             raise ArgumentError('Invalid search.  You must supply search '
                 'criteria')
-        viewName = 'search'
+        methodName = 'search'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'artist': artist, 'album': album,
             'title': title, 'any': any, 'count': count, 'offset': offset,
@@ -499,7 +508,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'search2'
+        methodName = 'search2'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'query': query, 'artistCount': artistCount,
             'artistOffset': artistOffset, 'albumCount': albumCount,
@@ -576,7 +586,8 @@ class Connection(object):
              u'version': u'1.5.0',
              u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'search3'
+        methodName = 'search3'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'query': query, 'artistCount': artistCount,
             'artistOffset': artistOffset, 'albumCount': albumCount,
@@ -610,7 +621,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getPlaylists'
+        methodName = 'getPlaylists'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'username': username})
 
@@ -651,7 +663,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getPlaylist'
+        methodName = 'getPlaylist'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName, {'id': pid})
         res = self._doInfoReq(req)
@@ -677,7 +690,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'createPlaylist'
+        methodName = 'createPlaylist'
+        viewName = '%s.view' % methodName
 
         if playlistId == name == None:
             raise ArgumentError('You must supply either a playlistId or a name')
@@ -703,7 +717,8 @@ class Connection(object):
         Returns a dict like the following:
 
         """
-        viewName = 'deletePlaylist'
+        methodName = 'deletePlaylist'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName, {'id': pid})
         res = self._doInfoReq(req)
@@ -721,7 +736,8 @@ class Connection(object):
         Returns the file-like object for reading or raises an exception
         on error
         """
-        viewName = 'download'
+        methodName = 'download'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName, {'id': sid})
         res = self._doBinReq(req)
@@ -765,7 +781,8 @@ class Connection(object):
         Returns the file-like object for reading or raises an exception
         on error
         """
-        viewName = 'stream'
+        methodName = 'stream'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'id': sid, 'maxBitRate': maxBitRate,
             'format': tformat, 'timeOffset': timeOffset, 'size': size,
@@ -790,7 +807,8 @@ class Connection(object):
         Returns the file-like object for reading or raises an exception
         on error
         """
-        viewName = 'getCoverArt'
+        methodName = 'getCoverArt'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'id': aid, 'size': size})
 
@@ -827,7 +845,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'scrobble'
+        methodName = 'scrobble'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'id': sid, 'submission': submission,
             'time': self._ts2milli(listenTime)})
@@ -853,7 +872,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'changePassword'
+        methodName = 'changePassword'
+        viewName = '%s.view' % methodName
         hexPass = 'enc:%s' % self._hexEnc(password)
 
         # There seems to be an issue with some subsonic implementations
@@ -895,7 +915,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getUser'
+        methodName = 'getUser'
+        viewName = '%s.view' % methodName
 
         q = {'username': username}
 
@@ -932,7 +953,8 @@ class Connection(object):
          u'version': u'1.10.2',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getUsers'
+        methodName = 'getUsers'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -963,7 +985,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'createUser'
+        methodName = 'createUser'
+        viewName = '%s.view' % methodName
         hexPass = 'enc:%s' % self._hexEnc(password)
 
         q = self._getQueryDict({
@@ -1008,7 +1031,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'updateUser'
+        methodName = 'updateUser'
+        viewName = '%s.view' % methodName
         if password is not None:
             password = 'enc:%s' % self._hexEnc(password)
         q = self._getQueryDict({'username': username, 'password': password,
@@ -1042,7 +1066,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'deleteUser'
+        methodName = 'deleteUser'
+        viewName = '%s.view' % methodName
 
         q = {'username': username}
 
@@ -1070,7 +1095,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getChatMessages'
+        methodName = 'getChatMessages'
+        viewName = '%s.view' % methodName
 
         q = {'since': self._ts2milli(since)}
 
@@ -1093,7 +1119,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'addChatMessage'
+        methodName = 'addChatMessage'
+        viewName = '%s.view' % methodName
 
         q = {'message': message}
 
@@ -1145,7 +1172,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getAlbumList'
+        methodName = 'getAlbumList'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'type': ltype, 'size': size,
             'offset': offset, 'fromYear': fromYear, 'toYear': toYear,
@@ -1201,7 +1229,8 @@ class Connection(object):
             u'version': u'1.8.0',
             u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getAlbumList2'
+        methodName = 'getAlbumList2'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'type': ltype, 'size': size,
             'offset': offset, 'fromYear': fromYear, 'toYear': toYear,
@@ -1260,7 +1289,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getRandomSongs'
+        methodName = 'getRandomSongs'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'size': size, 'genre': genre,
             'fromYear': fromYear, 'toYear': toYear,
@@ -1290,7 +1320,8 @@ class Connection(object):
          u'version': u'1.5.0',
          u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getLyrics'
+        methodName = 'getLyrics'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'artist': artist, 'title': title})
 
@@ -1326,7 +1357,8 @@ class Connection(object):
         offset:int      (added in API 1.7.0) Used by "skip".  Start playing
                         this many seconds into the track.
         """
-        viewName = 'jukeboxControl'
+        methodName = 'jukeboxControl'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'action': action, 'index': index,
             'gain': gain, 'offset': offset})
@@ -1399,7 +1431,8 @@ class Connection(object):
 
         See also: http://subsonic.svn.sourceforge.net/viewvc/subsonic/trunk/subsonic-main/src/main/webapp/xsd/podcasts_example_1.xml?view=markup
         """
-        viewName = 'getPodcasts'
+        methodName = 'getPodcasts'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'includeEpisodes': incEpisodes,
             'id': pid})
@@ -1437,7 +1470,8 @@ class Connection(object):
              }]}
         }
         """
-        viewName = 'getShares'
+        methodName = 'getShares'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -1465,7 +1499,8 @@ class Connection(object):
         This returns a structure like you would get back from getShares()
         containing just your new share.
         """
-        viewName = 'createShare'
+        methodName = 'createShare'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'description': description,
             'expires': self._ts2milli(expires)})
@@ -1485,7 +1520,8 @@ class Connection(object):
         expires:float       The new timestamp for the expiration time of this
                             share (optional).
         """
-        viewName = 'updateShare'
+        methodName = 'updateShare'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'id': shid, 'description': description,
             expires: self._ts2milli(expires)})
@@ -1505,7 +1541,8 @@ class Connection(object):
 
         Returns a standard response dict
         """
-        viewName = 'deleteShare'
+        methodName = 'deleteShare'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'id': shid})
 
@@ -1526,7 +1563,8 @@ class Connection(object):
 
         Returns a standard response dict
         """
-        viewName = 'setRating'
+        methodName = 'setRating'
+        viewName = '%s.view' % methodName
 
         try:
             rating = int(rating)
@@ -1566,7 +1604,8 @@ class Connection(object):
              u'version': u'1.8.0',
              u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getArtists'
+        methodName = 'getArtists'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -1608,7 +1647,8 @@ class Connection(object):
             u'version': u'1.8.0',
             u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getArtist'
+        methodName = 'getArtist'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'id': id})
 
@@ -1661,7 +1701,8 @@ class Connection(object):
             u'version': u'1.8.0',
             u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getAlbum'
+        methodName = 'getAlbum'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'id': id})
 
@@ -1706,7 +1747,8 @@ class Connection(object):
              u'version': u'1.8.0',
              u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getSong'
+        methodName = 'getSong'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'id': id})
 
@@ -1739,7 +1781,8 @@ class Connection(object):
                         u'transcodedSuffix': u'flv'}},
              u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getVideos'
+        methodName = 'getVideos'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -1811,7 +1854,8 @@ class Connection(object):
              u'version': u'1.8.0',
              u'xmlns': u'http://subsonic.org/restapi'}
         """
-        viewName = 'getStarred'
+        methodName = 'getStarred'
+        viewName = '%s.view' % methodName
 
         q = {}
         if musicFolderId:
@@ -1836,7 +1880,8 @@ class Connection(object):
 
             **See the output from getStarred()**
         """
-        viewName = 'getStarred2'
+        methodName = 'getStarred2'
+        viewName = '%s.view' % methodName
 
         q = {}
         if musicFolderId:
@@ -1866,7 +1911,8 @@ class Connection(object):
 
         Returns a normal status response dict
         """
-        viewName = 'updatePlaylist'
+        methodName = 'updatePlaylist'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'playlistId': lid, 'name': name,
             'comment': comment})
@@ -1894,7 +1940,8 @@ class Connection(object):
         Returns the file-like object for reading or raises an exception
         on error
         """
-        viewName = 'getAvatar'
+        methodName = 'getAvatar'
+        viewName = '%s.view' % methodName
 
         q = {'username': username}
 
@@ -1926,7 +1973,8 @@ class Connection(object):
 
         Returns a normal status response dict
         """
-        viewName = 'star'
+        methodName = 'star'
+        viewName = '%s.view' % methodName
 
         if not isinstance(sids, list) or isinstance(sids, tuple):
             sids = [sids]
@@ -1961,7 +2009,8 @@ class Connection(object):
 
         Returns a normal status response dict
         """
-        viewName = 'unstar'
+        methodName = 'unstar'
+        viewName = '%s.view' % methodName
 
         if not isinstance(sids, list) or isinstance(sids, tuple):
             sids = [sids]
@@ -1983,7 +2032,8 @@ class Connection(object):
 
         Returns all genres
         """
-        viewName = 'getGenres'
+        methodName = 'getGenres'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -2003,7 +2053,8 @@ class Connection(object):
         musicFolderId:int   Only return results from the music folder
                             with the given ID. See getMusicFolders
         """
-        viewName = 'getSongsByGenre'
+        methodName = 'getSongsByGenre'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'genre': genre,
             'count': count,
@@ -2042,7 +2093,8 @@ class Connection(object):
 
         Returns the raw m3u8 file as a string
         """
-        viewName = 'hls'
+        methodName = 'hls'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'id': mid, 'bitrate': bitrate})
         req = self._getRequest(viewName, q)
@@ -2062,7 +2114,8 @@ class Connection(object):
         Tells the server to check for new Podcast episodes. Note: The user
         must be authorized for Podcast administration
         """
-        viewName = 'refreshPodcasts'
+        methodName = 'refreshPodcasts'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -2078,7 +2131,8 @@ class Connection(object):
 
         url:str     The URL of the Podcast to add
         """
-        viewName = 'createPodcastChannel'
+        methodName = 'createPodcastChannel'
+        viewName = '%s.view' % methodName
 
         q = {'url': url}
 
@@ -2096,7 +2150,8 @@ class Connection(object):
 
         pid:str         The ID of the Podcast channel to delete
         """
-        viewName = 'deletePodcastChannel'
+        methodName = 'deletePodcastChannel'
+        viewName = '%s.view' % methodName
 
         q = {'id': pid}
 
@@ -2114,7 +2169,8 @@ class Connection(object):
 
         pid:str         The ID of the Podcast episode to delete
         """
-        viewName = 'deletePodcastEpisode'
+        methodName = 'deletePodcastEpisode'
+        viewName = '%s.view' % methodName
 
         q = {'id': pid}
 
@@ -2132,7 +2188,8 @@ class Connection(object):
 
         pid:str         The ID of the Podcast episode to download
         """
-        viewName = 'downloadPodcastEpisode'
+        methodName = 'downloadPodcastEpisode'
+        viewName = '%s.view' % methodName
 
         q = {'id': pid}
 
@@ -2147,7 +2204,8 @@ class Connection(object):
 
         Returns all internet radio stations
         """
-        viewName = 'getInternetRadioStations'
+        methodName = 'getInternetRadioStations'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -2164,8 +2222,8 @@ class Connection(object):
         name:str        The user-defined name for the station
         homepageUrl:str The homepage URL for the station
         """
-        viewName = 'createInternetRadioStation'
-        viewName = '{}'.format(methodName)
+        methodName = 'createInternetRadioStation'
+        viewName = '{}.view'.format(methodName)
 
         q = self._getQueryDict({
             'streamUrl': streamUrl, 'name': name, 'homepageUrl': homepageUrl})
@@ -2187,8 +2245,8 @@ class Connection(object):
         name:str        The user-defined name for the station
         homepageUrl:str The homepage URL for the station
         """
-        viewName = 'updateInternetRadioStation'
-        viewName = '{}'.format(methodName)
+        methodName = 'updateInternetRadioStation'
+        viewName = '{}.view'.format(methodName)
 
         q = self._getQueryDict({
             'id': iid, 'streamUrl': streamUrl, 'name': name,
@@ -2208,8 +2266,8 @@ class Connection(object):
 
         iid:str         The ID for the station
         """
-        viewName = 'deleteInternetRadioStation'
-        viewName = '{}'.format(methodName)
+        methodName = 'deleteInternetRadioStation'
+        viewName = '{}.view'.format(methodName)
 
         q = {'id': iid}
 
@@ -2225,7 +2283,8 @@ class Connection(object):
         Returns all bookmarks for this user.  A bookmark is a position
         within a media file
         """
-        viewName = 'getBookmarks'
+        methodName = 'getBookmarks'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -2244,7 +2303,8 @@ class Connection(object):
         position:int    The position (in milliseconds) within the media file
         comment:str     A user-defined comment
         """
-        viewName = 'createBookmark'
+        methodName = 'createBookmark'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'id': mid, 'position': position,
             'comment': comment})
@@ -2263,7 +2323,8 @@ class Connection(object):
         mid:str     The ID of the media file to delete the bookmark from.
                     Other users' bookmarks are not affected
         """
-        viewName = 'deleteBookmark'
+        methodName = 'deleteBookmark'
+        viewName = '%s.view' % methodName
 
         q = {'id': mid}
 
@@ -2284,7 +2345,8 @@ class Connection(object):
         includeNotPresent:bool  Whether to return artists that are not
                                 present in the media library
         """
-        viewName = 'getArtistInfo'
+        methodName = 'getArtistInfo'
+        viewName = '%s.view' % methodName
 
         q = {'id': aid, 'count': count,
             'includeNotPresent': includeNotPresent}
@@ -2305,7 +2367,8 @@ class Connection(object):
         includeNotPresent:bool  Whether to return artists that are not
                                 present in the media library
         """
-        viewName = 'getArtistInfo2'
+        methodName = 'getArtistInfo2'
+        viewName = '%s.view' % methodName
 
         q = {'id': aid, 'count': count,
             'includeNotPresent': includeNotPresent}
@@ -2326,7 +2389,8 @@ class Connection(object):
         iid:str     The artist, album, or song ID
         count:int   Max number of songs to return
         """
-        viewName = 'getSimilarSongs'
+        methodName = 'getSimilarSongs'
+        viewName = '%s.view' % methodName
 
         q = {'id': iid, 'count': count}
 
@@ -2345,7 +2409,8 @@ class Connection(object):
         iid:str     The artist, album, or song ID
         count:int   Max number of songs to return
         """
-        viewName = 'getSimilarSongs2'
+        methodName = 'getSimilarSongs2'
+        viewName = '%s.view' % methodName
 
         q = {'id': iid, 'count': count}
 
@@ -2369,7 +2434,9 @@ class Connection(object):
         move between different clients/apps while retaining the same play
         queue (for instance when listening to an audio book).
         """
-        viewName = 'savePlayQueue'
+        methodName = 'savePlayQueue'
+        viewName = '%s.view' % methodName
+
         if not isinstance(qids, (tuple, list)):
             qids = [qids]
 
@@ -2391,7 +2458,8 @@ class Connection(object):
         clients/apps while retaining the same play queue (for instance
         when listening to an audio book).
         """
-        viewName = 'getPlayQueue'
+        methodName = 'getPlayQueue'
+        viewName = '%s.view' % methodName
 
         req = self._getRequest(viewName)
         res = self._doInfoReq(req)
@@ -2407,7 +2475,8 @@ class Connection(object):
         artist:str      The artist to get songs for
         count:int       The number of songs to return
         """
-        viewName = 'getTopSongs'
+        methodName = 'getTopSongs'
+        viewName = '%s.view' % methodName
 
         q = {'artist': artist, 'count': count}
 
@@ -2424,7 +2493,8 @@ class Connection(object):
 
         count:int       The number of episodes to return
         """
-        viewName = 'getNewestPodcasts'
+        methodName = 'getNewestPodcasts'
+        viewName = '%s.view' % methodName
 
         q = {'count': count}
 
@@ -2470,7 +2540,8 @@ class Connection(object):
 
         vid:int     The video ID
         """
-        viewName = 'getVideoInfo'
+        methodName = 'getVideoInfo'
+        viewName = '%s.view' % methodName
 
         q = {'id': int(vid)}
         req = self._getRequest(viewName, q)
@@ -2486,7 +2557,8 @@ class Connection(object):
 
         aid:int     The album ID
         """
-        viewName = 'getAlbumInfo'
+        methodName = 'getAlbumInfo'
+        viewName = '%s.view' % methodName
 
         q = {'id': int(aid)}
         req = self._getRequest(viewName, q)
@@ -2502,7 +2574,8 @@ class Connection(object):
 
         aid:int     The album ID
         """
-        viewName = 'getAlbumInfo2'
+        methodName = 'getAlbumInfo2'
+        viewName = '%s.view' % methodName
 
         q = {'id': int(aid)}
         req = self._getRequest(viewName, q)
@@ -2520,7 +2593,8 @@ class Connection(object):
         vid:int         The ID of the video
         fmt:str         Preferred captions format ("srt" or "vtt")
         """
-        viewName = 'getCaptions'
+        methodName = 'getCaptions'
+        viewName = '%s.view' % methodName
 
         q = self._getQueryDict({'id': int(vid), 'format': fmt})
         req = self._getRequest(viewName, q)
@@ -2535,7 +2609,8 @@ class Connection(object):
         Returns True if refresh successful, False otherwise
         :rtype : boolean
         """
-        viewName = 'musicFolderSettings'
+        baseMethod = 'musicFolderSettings'
+        viewName = '%s.view' % baseMethod
 
         url = '%s:%d/%s/%s?%s' % (self._baseUrl, self._port,
             self._separateServerPath(), viewName, methodName)
@@ -2579,7 +2654,7 @@ class Connection(object):
 
         return qdict
 
-    def _getRequest(self, viewName, query={}) -> urllib.request.Request:
+    def _getRequest(self, viewName, query={}):
         qdict = self._getBaseQdict()
         qdict.update(query)
         url = '%s:%d/%s/%s' % (self._baseUrl, self._port, self._serverPath,
