@@ -2560,7 +2560,7 @@ class Connection(object):
         methodName = 'getAlbumInfo'
         viewName = '%s.view' % methodName
 
-        q = {'id': int(aid)}
+        q = {'id': aid}
         req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
@@ -2577,7 +2577,7 @@ class Connection(object):
         methodName = 'getAlbumInfo2'
         viewName = '%s.view' % methodName
 
-        q = {'id': int(aid)}
+        q = {'id': aid}
         req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
