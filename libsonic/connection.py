@@ -115,15 +115,12 @@ class Connection(object):
         self._legacyAuth = legacyAuth
         self._useGET = useGET
 
-        if password is None and (salt is None or token is None):
-            raise CredentialError('You must specify either a password or both salt and token arguments.')
-
         self._netrc = None
         if useNetrc is not None:
             self._process_netrc(useNetrc)
-        elif username is None or password is None:
+        elif username is None or (password is None and (salt is None or token is None)):
             raise CredentialError('You must specify either a username/password '
-                'combination or "useNetrc" must be either True or a string '
+                'combination or salt/token combination or "useNetrc" must be either True or a string '
                 'representing a path to a netrc file')
 
         self._port = int(port)
