@@ -38,7 +38,8 @@ logger = logging.getLogger(__name__)
 class Connection(object):
     def __init__(self, baseUrl, username=None, password=None, port=4040,
             serverPath='/rest', appName='py-sonic', apiVersion=API_VERSION,
-            insecure=False, useNetrc=None, legacyAuth=False, useGET=False):
+            insecure=False, useNetrc=None, legacyAuth=False, useGET=False,
+            salt=None, token=None):
         """
         This will create a connection to your subsonic server
 
@@ -68,6 +69,11 @@ class Connection(object):
         password:str        The password to use for the connection.  This
                             can be None if `useNetrc' is True (and you
                             have a valid entry in your netrc file)
+        salt:str            Instead of providing a password, the caller can
+                            provide both token and salt arguments for
+                            authenticaion, reducing the impact of plaintext
+                            passwords
+        token:str           Must be provided if the salt is provided.
         port:int            The port number to connect on.  The default for
                             unencrypted subsonic connections is 4040
         serverPath:str      The base resource path for the subsonic views.
@@ -104,8 +110,13 @@ class Connection(object):
         self._hostname = baseUrl.split('://')[1].strip()
         self._username = username
         self._rawPass = password
+        self._salt = salt
+        self._token = token
         self._legacyAuth = legacyAuth
         self._useGET = useGET
+
+        if password is None and (salt is None or token is None):
+            raise CredentialError('You must specify either a password or both salt and token arguments.')
 
         self._netrc = None
         if useNetrc is not None:
@@ -2645,8 +2656,12 @@ class Connection(object):
         if self._legacyAuth:
             qdict['p'] = 'enc:%s' % self._hexEnc(self._rawPass)
         else:
-            salt = self._getSalt()
-            token = md5((self._rawPass + salt).encode('utf-8')).hexdigest()
+            if self._rawPass:
+                salt = self._getSalt()
+                token = md5((self._rawPass + salt).encode('utf-8')).hexdigest()
+            else:
+                salt = self._salt
+                token = self._token
             qdict.update({
                 's': salt,
                 't': token,
