@@ -36,7 +36,7 @@ class ConnBase(ABC, Generic[ResponseT]):
     defined in media.media_types.py.
     """
     def __init__(self, base_url:str, username:str, password:str, port:int=4040,
-                 server_path:str='', app_name:str='py-opensonic', api_version:str=API_VERSION,
+                 api_key:str|None=None, server_path:str='', app_name:str='py-opensonic', api_version:str=API_VERSION,
                  use_netrc:str|None=None, legacy_auth:bool=False,
                  use_get:bool=False, use_views:bool=True):
         """
@@ -63,13 +63,14 @@ class ConnBase(ABC, Generic[ResponseT]):
                             port = 8080
                             server_path = "/path/to/subsonic/rest"
         username:str        The username to use for the connection.  This
-                            can be None if `use_netrc' is True (and you
+                            can be None if you are using api key authentication or `use_netrc' is True (and you
                             have a valid entry in your netrc file)
         password:str        The password to use for the connection.  This
-                            can be None if `use_netrc' is True (and you
+                            can be None if you are using api key authentication or `use_netrc' is True (and you
                             have a valid entry in your netrc file)
         port:int            The port number to connect on.  The default for
                             unencrypted subsonic connections is 4040
+        api_key:str         API key used for authentication as defined by Open Subsonic's API key extension.
         server_path:str      The base resource path for the subsonic views.
                             This is useful if you have your subsonic server
                             behind a proxy and the path that you are proxying
@@ -105,6 +106,7 @@ class ConnBase(ABC, Generic[ResponseT]):
         self.set_base_url(base_url)
         self._username = username
         self._raw_pass = password
+        self._api_key = api_key
         self._legacy_auth = legacy_auth
         self._use_get = use_get
         self._use_views = use_views
@@ -113,10 +115,12 @@ class ConnBase(ABC, Generic[ResponseT]):
         self._netrc = None
         if use_netrc is not None:
             self._process_netrc(use_netrc)
-        elif username is None or password is None:
+        elif (username is None or password is None) and api_key is None:
             raise errors.CredentialError('You must specify either a username/password '
-                'combination or "use_netrc" must be either True or a string '
+                'combination, api key with the api_key parameter or "use_netrc" must be either True or a string '
                 'representing a path to a netrc file')
+        elif username is not None and password is not None and api_key is not None:
+            raise errors.CredentialError('You must specify either username and password or api key')
 
         self.set_port(port)
         self.set_app_name(app_name)
@@ -154,6 +158,12 @@ class ConnBase(ABC, Generic[ResponseT]):
 
 
     api_version = property(lambda s: s._api_version)
+
+
+    def set_api_key(self, api_key:str) -> None:
+        """ Set api key. """
+        self._api_key = api_key
+    api_key = property(lambda s: s._api_key, set_api_key)
 
 
     def set_app_name(self, app_name:str) -> None:
@@ -212,18 +222,21 @@ class ConnBase(ABC, Generic[ResponseT]):
             'f': 'json',
             'v': self._api_version,
             'c': self._app_name,
-            'u': self._username,
         }
 
-        if self._legacy_auth:
-            qdict['p'] = f'enc:{self._hex_enc(self._raw_pass)}'
+        if self._api_key:
+            qdict['apiKey']  = self._api_key
         else:
-            salt = self._get_salt()
-            token = md5((self._raw_pass + salt).encode('utf-8')).hexdigest()
-            qdict.update({
-                's': salt,
-                't': token,
-            })
+            qdict['u'] = self._username
+            if self._legacy_auth:
+                qdict['p'] = f'enc:{self._hex_enc(self._raw_pass)}'
+            else:
+                salt = self._get_salt()
+                token = md5((self._raw_pass + salt).encode('utf-8')).hexdigest()
+                qdict.update({
+                    's': salt,
+                    't': token,
+                })
 
         return qdict
 

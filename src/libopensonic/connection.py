@@ -40,7 +40,7 @@ class Connection(ConnBase[Response]):
     defined in media.media_types.py.
     """
     def __init__(self, base_url:str, username:str, password:str, port:int=4040,
-                 server_path:str='', app_name:str='py-opensonic', api_version:str=API_VERSION,
+                 api_key:str|None=None, server_path:str='', app_name:str='py-opensonic', api_version:str=API_VERSION,
                  use_netrc:str|None=None, legacy_auth:bool=False,
                  use_get:bool=False, use_views:bool=True):
         """
@@ -67,13 +67,14 @@ class Connection(ConnBase[Response]):
                             port = 8080
                             server_path = "/path/to/subsonic/rest"
         username:str        The username to use for the connection.  This
-                            can be None if `use_netrc' is True (and you
+                            can be None if you are using api key authentication or `use_netrc' is True (and you
                             have a valid entry in your netrc file)
         password:str        The password to use for the connection.  This
-                            can be None if `use_netrc' is True (and you
+                            can be None if you are using api key authentication or `use_netrc' is True (and you
                             have a valid entry in your netrc file)
         port:int            The port number to connect on.  The default for
                             unencrypted subsonic connections is 4040
+        api_key:str         API key used for authentication as defined by Open Subsonic's API key extension.
         server_path:str      The base resource path for the subsonic views.
                             This is useful if you have your subsonic server
                             behind a proxy and the path that you are proxying
@@ -106,7 +107,7 @@ class Connection(ConnBase[Response]):
                             name. Disable this to drop the .view extension to
                             method name, e.g. ping instead of ping.view
         """
-        super().__init__(base_url, username, password, port, server_path, app_name, api_version,
+        super().__init__(base_url, username, password, port, api_key, server_path, app_name, api_version,
                        use_netrc, legacy_auth, use_get, use_views)
 
 
