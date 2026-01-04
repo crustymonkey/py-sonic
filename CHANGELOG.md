@@ -1,3 +1,7 @@
+##8.1.1
+
+Fix for trying to unpack the subsonic response twice in the synchronous Connection class.
+
 ##8.1.0
 
 Add API Keys as an option for authentication. Several open subsonic servers have deprecated using
