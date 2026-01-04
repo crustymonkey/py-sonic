@@ -1,3 +1,8 @@
+##8.1.0
+
+Add API Keys as an option for authentication. Several open subsonic servers have deprecated using
+username and password combinations for authentication and want to use API keys instead.
+
 ##8.0.1
 
 Add AsyncIO compatible AsyncConnection class for use in async event loops without jumping through
