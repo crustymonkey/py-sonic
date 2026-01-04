@@ -2267,7 +2267,7 @@ class Connection(ConnBase[Response]):
         res.raise_for_status()
         dres = res.json()["subsonic-response"]
         self._check_status(dres)
-        return dres['subsonic-response']
+        return dres
 
 
     def _handle_bin_res(self, res: Response) -> Response:
