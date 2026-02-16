@@ -39,7 +39,7 @@ class Connection(object):
     def __init__(self, baseUrl, username=None, password=None, port=4040,
             serverPath='/rest', appName='py-sonic', apiVersion=API_VERSION,
             insecure=False, useNetrc=None, legacyAuth=False, useGET=False,
-            salt=None, token=None, userAgent=None):
+            salt=None, token=None, userAgent=None, customHeaders=None):
         """
         This will create a connection to your subsonic server
 
@@ -108,6 +108,8 @@ class Connection(object):
         userAgent:str       If specified, use this User-Agent string in
                             the request header.  If None, the default Python
                             urllib UA will be used.
+        customHeaders:dict  A dictionary of custom headers that will be sent
+                            with each request.
         """
         self._baseUrl = baseUrl
         self._hostname = baseUrl.split('://')[1].strip()
@@ -118,6 +120,7 @@ class Connection(object):
         self._legacyAuth = legacyAuth
         self._useGET = useGET
         self._userAgent = userAgent
+        self._customHeaders = customHeaders if customHeaders else {}
 
         self._netrc = None
         if useNetrc is not None:
@@ -2626,7 +2629,7 @@ class Connection(object):
 
         url = '%s:%d/%s/%s?%s' % (self._baseUrl, self._port,
             self._separateServerPath(), viewName, methodName)
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(url, headers=self._customHeaders)
         res = self._opener.open(req)
         res_msg = res.msg.lower()
         return res_msg == 'ok'
@@ -2675,11 +2678,15 @@ class Connection(object):
         qdict.update(query)
         url = '%s:%d/%s/%s' % (self._baseUrl, self._port, self._serverPath,
             viewName)
-        req = urllib.request.Request(url, urlencode(qdict).encode('utf-8'))
+        req = urllib.request.Request(
+            url,
+            urlencode(qdict).encode('utf-8'),
+            headers=self._customHeaders,
+        )
 
         if self._useGET:
             url += '?%s' % urlencode(qdict)
-            req = urllib.request.Request(url)
+            req = urllib2.Request(url, headers=self._customHeaders)
 
         if self._userAgent:
             req.add_header('User-Agent', self._userAgent)
@@ -2699,11 +2706,15 @@ class Connection(object):
         data.write(urlencode(qdict))
         for i in alist:
             data.write('&%s' % urlencode({listName: i}))
-        req = urllib.request.Request(url, data.getvalue().encode('utf-8'))
+        req = urllib.request.Request(
+            url,
+            data.getvalue().encode('utf-8'),
+            headers=self._customHeaders,
+        )
 
         if self._useGET:
             url += '?%s' % data.getvalue()
-            req = urllib2.Request(url)
+            req = urllib2.Request(url, headers=self._customHeaders)
 
         if self._userAgent:
             req.add_header('User-Agent', self._userAgent)
@@ -2729,11 +2740,15 @@ class Connection(object):
         for k, l in listMap.items():
             for i in l:
                 data.write('&%s' % urlencode({k: i}))
-        req = urllib.request.Request(url, data.getvalue().encode('utf-8'))
+        req = urllib.request.Request(
+            url,
+            data.getvalue().encode('utf-8'),
+            headers=self._customHeaders,
+        )
 
         if self._useGET:
             url += '?%s' % data.getvalue()
-            req = urllib2.Request(url)
+            req = urllib2.Request(url, headers=self._customHeaders)
 
         if self._userAgent:
             req.add_header('User-Agent', self._userAgent)
