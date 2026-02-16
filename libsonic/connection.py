@@ -107,7 +107,8 @@ class Connection(object):
                             URLs can get very long with some API calls
         userAgent:str       If specified, use this User-Agent string in
                             the request header.  If None, the default Python
-                            urllib UA will be used.
+                            urllib UA will be used.  This is basically a
+                            shortcut instead of using `customHeaders`.
         customHeaders:dict  A dictionary of custom headers that will be sent
                             with each request.
         """
@@ -119,8 +120,9 @@ class Connection(object):
         self._token = token
         self._legacyAuth = legacyAuth
         self._useGET = useGET
-        self._userAgent = userAgent
         self._customHeaders = customHeaders if customHeaders else {}
+        if userAgent:
+            self._customHeaders['User-Agent'] = userAgent
 
         self._netrc = None
         if useNetrc is not None:
@@ -2688,9 +2690,6 @@ class Connection(object):
             url += '?%s' % urlencode(qdict)
             req = urllib2.Request(url, headers=self._customHeaders)
 
-        if self._userAgent:
-            req.add_header('User-Agent', self._userAgent)
-
         return req
 
     def _getRequestWithList(self, viewName, listName, alist, query={}):
@@ -2715,9 +2714,6 @@ class Connection(object):
         if self._useGET:
             url += '?%s' % data.getvalue()
             req = urllib2.Request(url, headers=self._customHeaders)
-
-        if self._userAgent:
-            req.add_header('User-Agent', self._userAgent)
 
         return req
 
@@ -2749,9 +2745,6 @@ class Connection(object):
         if self._useGET:
             url += '?%s' % data.getvalue()
             req = urllib2.Request(url, headers=self._customHeaders)
-
-        if self._userAgent:
-            req.add_header('User-Agent', self._userAgent)
 
         return req
 
