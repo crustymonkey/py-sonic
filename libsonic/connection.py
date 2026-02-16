@@ -2777,7 +2777,6 @@ class Connection(object):
 
     def _doInfoReq(self, req):
         # Returns a parsed dictionary version of the result
-        breakpoint()
         res = self._opener.open(req)
         dres = json.loads(res.read().decode('utf-8'))
         return dres['subsonic-response']
