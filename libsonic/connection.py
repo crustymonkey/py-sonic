@@ -2630,6 +2630,14 @@ class Connection(object):
         url = '%s:%d/%s/%s?%s' % (self._baseUrl, self._port,
             self._separateServerPath(), viewName, methodName)
         req = urllib.request.Request(url, headers=self._customHeaders)
+
+        if self._userAgent:
+            req.add_header('User-Agent', self._userAgent)
+
+        if ':' in req.host:
+            # Strip the port number off of the host header
+            req.host = req.host.split(':')[0]
+
         res = self._opener.open(req)
         res_msg = res.msg.lower()
         return res_msg == 'ok'
@@ -2691,6 +2699,10 @@ class Connection(object):
         if self._userAgent:
             req.add_header('User-Agent', self._userAgent)
 
+        if ':' in req.host:
+            # Strip the port number off of the host header
+            req.host = req.host.split(':')[0]
+
         return req
 
     def _getRequestWithList(self, viewName, listName, alist, query={}):
@@ -2718,6 +2730,10 @@ class Connection(object):
 
         if self._userAgent:
             req.add_header('User-Agent', self._userAgent)
+
+        if ':' in req.host:
+            # Strip the port number off of the host header
+            req.host = req.host.split(':')[0]
 
         return req
 
@@ -2753,10 +2769,15 @@ class Connection(object):
         if self._userAgent:
             req.add_header('User-Agent', self._userAgent)
 
+        if ':' in req.host:
+            # Strip the port number off of the host header
+            req.host = req.host.split(':')[0]
+
         return req
 
     def _doInfoReq(self, req):
         # Returns a parsed dictionary version of the result
+        breakpoint()
         res = self._opener.open(req)
         dres = json.loads(res.read().decode('utf-8'))
         return dres['subsonic-response']
