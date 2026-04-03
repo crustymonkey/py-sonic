@@ -1025,7 +1025,7 @@ class Connection(ConnBase[Response]):
         artist:str      The artist name
         title:str       The song title
 
-        Returns a 
+        Returns a Lyrics Object
 
         """
         method = 'getLyrics'
@@ -1048,7 +1048,7 @@ class Connection(ConnBase[Response]):
         The lyrics can come from embedded tags (SYLT/USLT), LRC file/text
         file, or any other external source.
 
-        id:str          The id of the requested songA
+        id:str          The id of the requested song
 
         Returns a list of media.StructuredLyrics
         """
@@ -1059,6 +1059,8 @@ class Connection(ConnBase[Response]):
         res = self._do_request(method, q)
         dres = self._handle_info_res(res)
         self._check_status(dres)
+        if 'structuredLyrics' not in dres['lyricsList']:
+            return []
         return [StructuredLyrics.from_dict(l) for l in dres['lyricsList']['structuredLyrics']]
 
 
@@ -1066,7 +1068,7 @@ class Connection(ConnBase[Response]):
         """
         since: 1.0.0
 
-        https://opensubsonic.netlify.app/docs/endpoints/getindexes/ 
+        https://opensubsonic.netlify.app/docs/endpoints/getindexes/
 
         Returns a listing of all files in a music directory.  Typically used
         to get a list of albums for an artist or list of songs for an album.
