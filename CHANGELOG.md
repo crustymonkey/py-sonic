@@ -1,3 +1,7 @@
+##8.1.2
+
+Fix for trying to unpack an optional field in get_lyrics_by_song_id() method.
+
 ##8.1.1
 
 Fix for trying to unpack the subsonic response twice in the synchronous Connection class.
