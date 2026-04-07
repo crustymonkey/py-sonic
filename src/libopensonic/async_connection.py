@@ -974,7 +974,7 @@ class AsyncConnection(ConnBase[ClientResponse]):
         res = await self._do_request(method, q)
         dres = await self._handle_info_res(res)
         self._check_status(dres)
-        if 'structuredLyrics' not in dres['lyricsList']:
+        if 'structuredLyrics' not in dres['lyricsList'] or not dres['lyricsList']['structuredLyrics']:
             return []
         return [StructuredLyrics.from_dict(l) for l in dres['lyricsList']['structuredLyrics']]
 
