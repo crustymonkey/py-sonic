@@ -1,3 +1,7 @@
+##8.1.3
+
+Fixing get_lyrics_by_song_id() again, this time for a present key with a None value
+
 ##8.1.2
 
 Fix for trying to unpack an optional field in get_lyrics_by_song_id() method.
