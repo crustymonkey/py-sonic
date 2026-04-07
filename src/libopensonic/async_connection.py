@@ -15,14 +15,10 @@ You should have received a copy of the GNU General Public License
 along with py-opensonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
-from netrc import netrc
-from hashlib import md5
-import os
-
 import aiohttp
 from aiohttp import ClientResponse, ClientTimeout
 
-from .conn_base import ConnBase, API_VERSION
+from .conn_base import ConnBase
 from . import errors
 from .media.media_types import (Album, AlbumID3, AlbumInfo, ArtistID3, ArtistInfo, ArtistInfo2,
                                 Artists, Bookmark, ChatMessage, Child, Directory, Error, Genre,
@@ -38,78 +34,6 @@ class AsyncConnection(ConnBase[ClientResponse]):
     This is the only class used to make calls of an OpenSubsonic server. All return types are
     defined in media.media_types.py.
     """
-    def __init__(self, base_url:str, username:str, password:str, port:int=4040,
-                 api_key:str|None=None, server_path:str='', app_name:str='py-opensonic', api_version:str=API_VERSION,
-                 use_netrc:str|None=None, legacy_auth:bool=False,
-                 use_get:bool=False, use_views:bool=True):
-        """
-        This will create a connection to your subsonic server
-
-        base_url:str         The base url for your server. Be sure to use
-                            "https" for SSL connections.  If you are using
-                            a port other than the default 4040, be sure to
-                            specify that with the port argument.  Do *not*
-                            append it here.
-
-                            ex: http://subsonic.example.com
-
-                            If you are running subsonic under a different
-                            path, specify that with the "server_path" arg,
-                            *not* here.  For example, if your subsonic
-                            lives at:
-
-                            https://mydomain.com:8080/path/to/subsonic/rest
-
-                            You would set the following:
-
-                            base_url = "https://mydomain.com"
-                            port = 8080
-                            server_path = "/path/to/subsonic/rest"
-        username:str        The username to use for the connection.  This
-                            can be None if you are using api key authentication or `use_netrc' is True (and you
-                            have a valid entry in your netrc file)
-        password:str        The password to use for the connection.  This
-                            can be None if you are using api key authentication or `use_netrc' is True (and you
-                            have a valid entry in your netrc file)
-        port:int            The port number to connect on.  The default for
-                            unencrypted subsonic connections is 4040
-        api_key:str         API key used for authentication as defined by Open Subsonic's API key extension.
-        server_path:str      The base resource path for the subsonic views.
-                            This is useful if you have your subsonic server
-                            behind a proxy and the path that you are proxying
-                            is different from the default of '/rest'.
-                            Ex:
-                                server_path='/path/to/subs'
-
-                              The full url that would be built then would be
-                              (assuming defaults and using "example.com" and
-                              you are using the "ping" view):
-
-                                http://example.com:4040/path/to/subs/ping
-        app_name:str         The name of your application.
-        api_version:str      The API version you wish to use for your
-                            application.  Subsonic will throw an error if you
-                            try to use/send an api version higher than what
-                            the server supports.  See the Subsonic API docs
-                            to find the Subsonic version -> API version table.
-                            This is useful if you are connecting to an older
-                            version of Subsonic.
-        use_netrc:str|bool   You can either specify a specific netrc
-                            formatted file or True to use your default
-                            netrc file ($HOME/.netrc).
-        legacy_auth:bool     Use pre-1.13.0 API version authentication
-        use_get:bool         Use a GET request instead of the default POST
-                            request.  This is not recommended as request
-                            URLs can get very long with some API calls
-        use_views:bool       The original Subsonic wanted API clients
-                            user the .view end points instead of just the method
-                            name. Disable this to drop the .view extension to
-                            method name, e.g. ping instead of ping.view
-        """
-        super().__init__(base_url, username, password, port, api_key, server_path, app_name, api_version,
-                       use_netrc, legacy_auth, use_get, use_views)
-
-
 
     # API methods
     async def add_chat_message(self, message:str) -> bool:
