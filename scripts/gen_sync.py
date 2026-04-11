@@ -72,6 +72,16 @@ def run_unasync():
                 content = content.replace(target, replace)
                 updated = True
 
+            target = "('getCoverArt', q)"
+            if target in content:
+                content = content.replace(target, "('getCoverArt', q, is_stream=True)")
+                updated = True
+
+            target = "('stream', q)"
+            if target in content:
+                content = content.replace(target, "('stream', q, is_stream=True)")
+                updated = True
+
             if updated:
                 p.write_text(content)
 

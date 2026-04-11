@@ -998,11 +998,9 @@ class AsyncConnection:
         Returns the file-like object for reading or raises an exception
         on error
         """
-        method = 'getCoverArt'
-
         q = self._get_query_dict({'id': aid, 'size': size})
 
-        res = await self._do_request(method, q, is_stream=True)
+        res = await self._do_request('getCoverArt', q)
         dres = await self._handle_bin_res(res)
         if isinstance(dres, dict):
             self._check_status(dres)
@@ -2101,14 +2099,12 @@ class AsyncConnection:
         Returns the file-like object for reading or raises an exception
         on error
         """
-        method = 'stream'
-
         q = self._get_query_dict({'id': sid, 'maxBitRate': max_bit_rate,
             'format': tformat, 'timeOffset': time_offset, 'size': size,
             'estimateContentLength': estimate_length,
             'converted': converted})
 
-        res = await self._do_request(method, q, is_stream=True)
+        res = await self._do_request('stream', q)
         dres = await self._handle_bin_res(res)
         if isinstance(dres, dict):
             self._check_status(dres)
