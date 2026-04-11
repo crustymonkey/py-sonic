@@ -2,5 +2,8 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "libopensonic"
+version = "9.0.0"
 [project.optional-dependencies]
 dev = ["unasync"]
