@@ -1,3 +1,7 @@
+##9.0.0
+
+Use unasync to generate synchronous Connection class and stop maintaining duplicate code.
+
 ##8.1.3
 
 Fixing get_lyrics_by_song_id() again, this time for a present key with a None value
