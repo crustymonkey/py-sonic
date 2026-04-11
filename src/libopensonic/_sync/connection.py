@@ -754,7 +754,7 @@ class Connection:
         res = self._do_request(method, q)
         dres = self._handle_info_res(res)
         self._check_status(dres)
-        if 'album' not in dres['albumList']:
+        if 'album' not in dres['albumList'] or not dres['albumList']['album']:
             return []
         return [Album.from_dict(entry) for entry in dres['albumList']['album']]
 
@@ -797,7 +797,7 @@ class Connection:
         res = self._do_request(method, q)
         dres = self._handle_info_res(res)
         self._check_status(dres)
-        if 'album' not in dres['albumList2']:
+        if 'album' not in dres['albumList2'] or not dres['albumList2']['album']:
             return []
         return [AlbumID3.from_dict(entry) for entry in dres['albumList2']['album']]
 
@@ -933,6 +933,8 @@ class Connection:
         res = self._do_request(method)
         dres = self._handle_info_res(res)
         self._check_status(dres)
+        if 'bookmark' not in dres['bookmarks'] or not dres['bookmarks']['bookmark']:
+            return []
         return [Bookmark.from_dict(b) for b in dres['bookmarks']['bookmark']]
 
 
@@ -977,6 +979,8 @@ class Connection:
         res = self._do_request(method, q)
         dres = self._handle_info_res(res)
         self._check_status(dres)
+        if 'chatMessage' not in dres['chatMessages'] or not dres['chatMessages']['chatMessage']:
+            return []
         return [ChatMessage.from_dict(dres['chatMessages']['chatMessage'])]
 
 
@@ -1018,6 +1022,8 @@ class Connection:
         res = self._do_request(method)
         dres = self._handle_info_res(res)
         self._check_status(dres)
+        if 'genre' not in dres['genres'] or not dres['genres']['genre']:
+            return []
         return [Genre.from_dict(g) for g in dres['genres']['genre']]
 
 
@@ -1063,6 +1069,10 @@ class Connection:
         res = self._do_request(method)
         dres = self._handle_info_res(res)
         self._check_status(dres)
+        if 'internetRadioStation' not in dres['internetRadioStations']['internetRadioStation']:
+            return []
+        if not dres['internetRadioStations']['internetRadioStation']:
+            return []
         return [InternetRadioStation.from_dict(i)
                 for i in dres['internetRadioStations']['internetRadioStation']]
 
@@ -1181,6 +1191,8 @@ class Connection:
         res = self._do_request(method)
         dres = self._handle_info_res(res)
         self._check_status(dres)
+        if "musicFolders" not in dres or not dres["musicFolders"]:
+            return []
         return [MusicFolder.from_dict(f) for f in dres["musicFolders"]]
 
 
@@ -1219,6 +1231,8 @@ class Connection:
         res = self._do_request(method)
         dres = self._handle_info_res(res)
         self._check_status(dres)
+        if 'entry' not in dres['nowPlaying'] or not dres['nowPlaying']['entry']:
+            return []
         return [NowPlayingEntry.from_dict(n) for n in dres['nowPlaying']['entry']]
 
 
@@ -1286,10 +1300,9 @@ class Connection:
         res = self._do_request(method, q)
         dres = self._handle_info_res(res)
         self._check_status(dres)
-        if 'playlist' in dres['playlists']:
-            return [Playlist.from_dict(entry) for entry in dres['playlists']['playlist']]
-        else:
+        if 'playlist' not in dres['playlists'] or not dres['playlists']['playlist']:
             return [] 
+        return [Playlist.from_dict(entry) for entry in dres['playlists']['playlist']]
 
 
     def get_play_queue(self) -> PlayQueue:
@@ -1336,6 +1349,8 @@ class Connection:
         res = self._do_request(method, q)
         dres = self._handle_info_res(res)
         self._check_status(dres)
+        if 'channel' not in dres['podcasts'] or not dres['podcasts']['channel']:
+            return []
         return [PodcastChannel.from_dict(entry) for entry in dres['podcasts']['channel']]
 
 
@@ -1364,6 +1379,8 @@ class Connection:
         res = self._do_request(method, q)
         dres = self._handle_info_res(res)
         self._check_status(dres)
+        if 'song' not in dres['randomSongs'] or not dres['randomSongs']['song']:
+            return []
         return [Child.from_dict(entry) for entry in dres['randomSongs']['song']]
 
 
@@ -1406,6 +1423,8 @@ class Connection:
         res = self._do_request(method)
         dres = self._handle_info_res(res)
         self._check_status(dres)
+        if 'share' not in dres['shares'] or not dres['shares']['share']:
+            return []
         return [Share.from_dict(s) for s in dres['shares']['share']]
 
 
@@ -1429,7 +1448,7 @@ class Connection:
         res = self._do_request(method, q)
         dres = self._handle_info_res(res)
         self._check_status(dres)
-        if 'similarSongs' not in dres or 'song' not in dres['similarSongs']:
+        if 'song' not in dres['similarSongs'] or not dres['similarSongs']['song']:
             return []
         return [Child.from_dict(entry) for entry in dres['similarSongs']['song']]
 
@@ -1453,7 +1472,7 @@ class Connection:
         res = self._do_request(method, q)
         dres = self._handle_info_res(res)
         self._check_status(dres)
-        if 'similarSongs2' not in dres or 'song' not in dres['similarSongs2']:
+        if 'song' not in dres['similarSongs2'] or not dres['similarSongs2']['song']:
             return []
         return [Child.from_dict(entry) for entry in dres['similarSongs2']['song']]
 
@@ -1508,6 +1527,8 @@ class Connection:
         res = self._do_request(method, q)
         dres = self._handle_info_res(res)
         self._check_status(dres)
+        if 'song' not in dres['songsByGenre'] or not dres['songsByGenre']['song']:
+            return []
         return [Child.from_dict(entry) for entry in dres['songsByGenre']['song']]
 
 
@@ -1578,7 +1599,7 @@ class Connection:
         res = self._do_request(method, q)
         dres = self._handle_info_res(res)
         self._check_status(dres)
-        if 'topSongs' not in dres or 'song' not in dres['topSongs']:
+        if 'song' not in dres['topSongs'] or not dres['topSongs']['song']:
             return []
         return [Child.from_dict(entry) for entry in dres['topSongs']['song']]
 
