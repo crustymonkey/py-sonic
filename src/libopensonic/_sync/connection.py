@@ -2417,8 +2417,7 @@ class Connection:
         return salt[:length]
 
 
-    def _do_request(self, method: str, query: dict | None = None,
-                          is_stream: bool = False) -> Response: # noqa: W0613
+    def _do_request(self, method: str, query: dict | None = None, is_stream: bool = False) -> Response:
         qdict = self._get_base_qdict()
         if query is not None:
             qdict.update(query)

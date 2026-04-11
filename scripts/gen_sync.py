@@ -49,7 +49,7 @@ def run_unasync():
         for p in sync_path.glob("*.py"):
             content = p.read_text()
             updated = False
-            
+
             # Use the string that unasync partially generated (requests.ClientTimeout...)
             target = "requests.ClientTimeout(total=None, sock_connect=30, sock_read=60)"
             if target in content:
@@ -64,6 +64,12 @@ def run_unasync():
             target = ", **req_kwargs"
             if target in content:
                 content = content.replace(target, ", stream=is_stream")
+                updated = True
+
+            target = "def _do_request(self, method: str, query: dict | None = None)"
+            if target in content:
+                replace = "def _do_request(self, method: str, query: dict | None = None, is_stream: bool = False)"
+                content = content.replace(target, replace)
                 updated = True
 
             if updated:

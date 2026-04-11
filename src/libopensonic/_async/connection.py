@@ -2417,8 +2417,7 @@ class AsyncConnection:
         return salt[:length]
 
 
-    async def _do_request(self, method: str, query: dict | None = None,
-                          is_stream: bool = False) -> ClientResponse: # noqa: W0613
+    async def _do_request(self, method: str, query: dict | None = None) -> ClientResponse:
         qdict = self._get_base_qdict()
         if query is not None:
             qdict.update(query)
