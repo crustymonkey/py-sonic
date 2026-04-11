@@ -17,4 +17,4 @@ along with py-opensonic.  If not, see <http://www.gnu.org/licenses/>
 
 
 #Semantic versioning string for the library
-__version__ = '9.0.0'
+__version__ = '9.0.1'

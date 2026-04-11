@@ -1,3 +1,9 @@
+##9.0.1
+
+DO some more moving stuff around and removing unnecessary code from the async impl. Given that
+we are already doing string replacement hax, what are a few more if it keeps the async impl a
+little cleaner. It's no more gross than function coloring anyways.
+
 ##9.0.0
 
 Use unasync to generate synchronous Connection class and stop maintaining duplicate code.
