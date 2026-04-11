@@ -15,11 +15,15 @@ You should have received a copy of the GNU General Public License
 along with py-opensonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
-from requests import get, post, Response
+from hashlib import md5
+from netrc import netrc
+import os
 
-from .conn_base import ConnBase
-from . import errors
-from .media.media_types import (Album, AlbumID3, AlbumInfo, ArtistID3, ArtistInfo, ArtistInfo2,
+import requests
+from requests import Response
+
+from .. import errors
+from ..media.media_types import (Album, AlbumID3, AlbumInfo, ArtistID3, ArtistInfo, ArtistInfo2,
                                 Artists, Bookmark, ChatMessage, Child, Directory, Error, Genre,
                                 Indexes, InternetRadioStation, JukeboxPlaylist, JukeboxStatus,
                                 Lyrics, MusicFolder, NowPlayingEntry, OpenSubsonicExtension,
@@ -28,11 +32,172 @@ from .media.media_types import (Album, AlbumID3, AlbumInfo, ArtistID3, ArtistInf
                                 StructuredLyrics, User)
 
 
-class Connection(ConnBase[Response]):
+API_VERSION = '1.16.1'
+
+
+class Connection:
     """
     This is the only class used to make calls of an OpenSubsonic server. All return types are
     defined in media.media_types.py.
     """
+    def __init__(self, base_url:str, username:str, password:str, port:int=4040,
+                 api_key:str|None=None, server_path:str='', app_name:str='py-opensonic', api_version:str=API_VERSION,
+                 use_netrc:str|None=None, legacy_auth:bool=False,
+                 use_get:bool=False, use_views:bool=True):
+        """
+        This will create a connection to your subsonic server
+
+        base_url:str         The base url for your server. Be sure to use
+                            "https" for SSL connections.  If you are using
+                            a port other than the default 4040, be sure to
+                            specify that with the port argument.  Do *not*
+                            append it here.
+
+                            ex: http://subsonic.example.com
+
+                            If you are running subsonic under a different
+                            path, specify that with the "server_path" arg,
+                            *not* here.  For example, if your subsonic
+                            lives at:
+
+                            https://mydomain.com:8080/path/to/subsonic/rest
+
+                            You would set the following:
+
+                            base_url = "https://mydomain.com"
+                            port = 8080
+                            server_path = "/path/to/subsonic/rest"
+        username:str        The username to use for the connection.  This
+                            can be None if you are using api key authentication or `use_netrc' is True (and you
+                            have a valid entry in your netrc file)
+        password:str        The password to use for the connection.  This
+                            can be None if you are using api key authentication or `use_netrc' is True (and you
+                            have a valid entry in your netrc file)
+        port:int            The port number to connect on.  The default for
+                            unencrypted subsonic connections is 4040
+        api_key:str         API key used for authentication as defined by Open Subsonic's API key extension.
+        server_path:str      The base resource path for the subsonic views.
+                            This is useful if you have your subsonic server
+                            behind a proxy and the path that you are proxying
+                            is different from the default of '/rest'.
+                            Ex:
+                                server_path='/path/to/subs'
+
+                              The full url that would be built then would be
+                              (assuming defaults and using "example.com" and
+                              you are using the "ping" view):
+
+                                http://example.com:4040/path/to/subs/ping
+        app_name:str         The name of your application.
+        api_version:str      The API version you wish to use for your
+                            application.  Subsonic will throw an error if you
+                            try to use/send an api version higher than what
+                            the server supports.  See the Subsonic API docs
+                            to find the Subsonic version -> API version table.
+                            This is useful if you are connecting to an older
+                            version of Subsonic.
+        use_netrc:str|bool   You can either specify a specific netrc
+                            formatted file or True to use your default
+                            netrc file ($HOME/.netrc).
+        legacy_auth:bool     Use pre-1.13.0 API version authentication
+        use_get:bool         Use a GET request instead of the default POST
+                            request.  This is not recommended as request
+                            URLs can get very long with some API calls
+        use_views:bool       The original Subsonic wanted API clients
+                            user the .view end points instead of just the method
+                            name. Disable this to drop the .view extension to
+                            method name, e.g. ping instead of ping.view
+        """
+        self.set_base_url(base_url)
+        self._username = username
+        self._raw_pass = password
+        self._api_key = api_key
+        self._legacy_auth = legacy_auth
+        self._use_get = use_get
+        self._use_views = use_views
+        self._api_version = api_version
+        self._sess: requests.Session | None  = None
+        self._timeout = (30, 60)
+
+        self._netrc = None
+        if use_netrc is not None:
+            self._process_netrc(use_netrc)
+        elif (username is None or password is None) and api_key is None:
+            raise errors.CredentialError('You must specify either a username/password '
+                'combination, api key with the api_key parameter or "use_netrc" must be either True or a string '
+                'representing a path to a netrc file')
+        elif username is not None and password is not None and api_key is not None:
+            raise errors.CredentialError('You must specify either username and password or api key')
+
+        self.set_port(port)
+        self.set_app_name(app_name)
+        self.set_server_path(server_path)
+
+
+    # Properties
+    def set_base_url(self, url:str) -> None:
+        """ Set our base URL. """
+        self._base_url = url
+        if '://' in url:
+            self._hostname = url.split('://')[1].strip()
+        else:
+            self._hostname = url
+    base_url = property(lambda s: s._base_url, set_base_url)
+
+
+    def set_port(self, port:int) -> None:
+        """ Set the port to use. """
+        self._port = port
+    port = property(lambda s: s._port, set_port)
+
+
+    def set_username(self, username:str) -> None:
+        """ Set our username. """
+        self._username = username
+    username = property(lambda s: s._username, set_username)
+
+
+    def set_password(self, password:str) -> None:
+        """ Set our password. """
+        self._raw_pass = password
+        # Redo the opener with the new creds
+    password = property(lambda s: s._raw_pass, set_password)
+
+
+    api_version = property(lambda s: s._api_version)
+
+
+    def set_api_key(self, api_key:str) -> None:
+        """ Set api key. """
+        self._api_key = api_key
+    api_key = property(lambda s: s._api_key, set_api_key)
+
+
+    def set_app_name(self, app_name:str) -> None:
+        """ Set the app name. """
+        self._app_name = app_name
+    app_name = property(lambda s: s._app_name, set_app_name)
+
+
+    def set_server_path(self, path:str) -> None:
+        """ Set our server path. """
+        sep = ''
+        if path != '' and not path.endswith('/'):
+            sep = '/'
+        self._server_path = f"{path}{sep}rest".strip('/')
+    server_path = property(lambda s: s._server_path, set_server_path)
+
+
+    def set_legacy_auth(self, lauth:bool) -> None:
+        """ Set the legacy_auth field. """
+        self._legacy_auth = lauth
+    legacy_auth = property(lambda s: s._legacy_auth, set_legacy_auth)
+
+
+    def set_get(self, g:bool) -> None:
+        """ Set use_get field. """
+        self._use_get = g
+    use_get = property(lambda s: s._use_get, set_get)
 
     # API methods
     def add_chat_message(self, message:str) -> bool:
@@ -438,9 +603,6 @@ class Connection(ConnBase[Response]):
         dres = self._handle_bin_res(res)
         if isinstance(dres, dict):
             self._check_status(dres)
-            # The following raise is to make the type checker happy, we cannont get to it
-            # if dres is a dict as we will raise in _check_status
-            raise
         return dres
 
 
@@ -743,7 +905,7 @@ class Connection(ConnBase[Response]):
 
         username:str    The user to retrieve the avatar for
 
-        Returns the requests.Response object for reading on success or raises
+        Returns the aiohttp.ClientResponse object for reading on success or raises
         and exception
         """
         method = 'getAvatar'
@@ -754,9 +916,6 @@ class Connection(ConnBase[Response]):
         dres = self._handle_bin_res(res)
         if isinstance(dres, dict):
             self._check_status(dres)
-            # The following raise is to make the type checker happy, we cannont get to it
-            # if dres is a dict as we will raise in _check_status
-            raise
         return dres
 
 
@@ -843,9 +1002,6 @@ class Connection(ConnBase[Response]):
         dres = self._handle_bin_res(res)
         if isinstance(dres, dict):
             self._check_status(dres)
-            # The following raise is to make the type checker happy, we cannont get to it
-            # if dres is a dict as we will raise in _check_status
-            raise
         return dres
 
 
@@ -948,7 +1104,7 @@ class Connection(ConnBase[Response]):
         artist:str      The artist name
         title:str       The song title
 
-        Returns a Lyrics Object
+        Returns a Lyrics object
 
         """
         method = 'getLyrics'
@@ -1538,7 +1694,6 @@ class Connection(ConnBase[Response]):
         dres = self._handle_bin_res(res)
         if isinstance(dres, dict):
             self._check_status(dres)
-            return
         return dres.content
 
 
@@ -1707,7 +1862,6 @@ class Connection(ConnBase[Response]):
         return True
 
 
-    #@deprecated("The search method has been deprecated since 1.4.0, use search[2|3] instead")
     def search(self, artist=None, album=None, title=None, dummy=None,
             count=20, offset=0, newer_than=None):
         """
@@ -1716,7 +1870,7 @@ class Connection(ConnBase[Response]):
         DEPRECATED SINCE API 1.4.0!  USE search3() INSTEAD!
         """
         raise NotImplementedError("search is deprecated in favor of search2 or search3")
-
+    
 
     def search2(self, query:str, artist_count:int=20, artist_offset:int=0,
                 album_count:int=20, album_offset:int=0, song_count:int=20,
@@ -1934,12 +2088,9 @@ class Connection(ConnBase[Response]):
             'converted': converted})
 
         res = self._do_request(method, q, is_stream=True)
-        dres: Response | dict = self._handle_bin_res(res)
+        dres = self._handle_bin_res(res)
         if isinstance(dres, dict):
             self._check_status(dres)
-            # The following raise is to make the type checker happy, we cannont get to it
-            # if dres is a dict as we will raise in _check_status
-            raise
         return dres
 
 
@@ -2127,7 +2278,126 @@ class Connection(ConnBase[Response]):
     #
     # Private internal methods
     #
-    def _do_request(self, method:str, query:dict|None=None, is_stream:bool=False) -> Response:
+    def _get_query_dict(self, d:dict) -> dict:
+        """
+        Given a dictionary, it cleans out all the values set to None
+        """
+        for k, v in list(d.items()):
+            if v is None:
+                del d[k]
+        return d
+
+
+    def _get_base_qdict(self) -> dict:
+        qdict = {
+            'f': 'json',
+            'v': self._api_version,
+            'c': self._app_name,
+        }
+
+        if self._api_key:
+            qdict['apiKey']  = self._api_key
+        else:
+            qdict['u'] = self._username
+            if self._legacy_auth:
+                qdict['p'] = f'enc:{self._hex_enc(self._raw_pass)}'
+            else:
+                salt = self._get_salt()
+                token = md5((self._raw_pass + salt).encode('utf-8')).hexdigest()
+                qdict.update({
+                    's': salt,
+                    't': token,
+                })
+
+        return qdict
+    
+
+    def _check_status(self, result:dict) -> bool:
+        if result['status'] == 'failed':
+            exc = errors.getExcByCode(result['error']['code'])
+            raise exc(result['error']['message'])
+        return True
+
+
+    def _hex_enc(self, raw:str) -> str:
+        """
+        Returns a "hex encoded" string per the Subsonic api docs
+
+        raw:str     The string to hex encode
+        """
+        ret = ''
+        for c in raw:
+            ret += f'{ord(c):02X}'
+        return ret
+
+
+    def _ts2milli(self, ts:int | None) -> int | None:
+        """
+        For whatever reason, Subsonic uses timestamps in milliseconds since
+        the unix epoch.  I have no idea what need there is of this precision,
+        but this will just multiply the timestamp times 1000 and return the int
+        """
+        if ts is None:
+            return None
+        return int(ts * 1000)
+
+
+    def _fix_last_modified(self, data):
+        """
+        This will recursively walk through a data structure and look for
+        a dict key/value pair where the key is "lastModified" and change
+        the shitty java millisecond timestamp to a real unix timestamp
+        of SECONDS since the unix epoch.  JAVA SUCKS!
+        """
+        if isinstance(data, dict):
+            for k, v in list(data.items()):
+                if k == 'lastModified':
+                    data[k] = int(v) / 1000.0
+                    return data
+                elif isinstance(v, (tuple, list, dict)):
+                    return self._fix_last_modified(v)
+        elif isinstance(data, (list, tuple)):
+            for item in data:
+                if isinstance(item, (list, tuple, dict)):
+                    return self._fix_last_modified(item)
+
+
+    def _process_netrc(self, use_netrc:str):
+        """
+        The use_netrc var is either a boolean, which means we should use
+        the user's default netrc, or a string specifying a path to a
+        netrc formatted file
+
+        use_netrc:bool|str      Either set to True to use the user's default
+                                netrc file or a string specifying a specific
+                                netrc file to use
+        """
+        if not use_netrc:
+            raise errors.CredentialError('use_netrc must be either a boolean "True" '
+                'or a string representing a path to a netrc file, '
+                f'not {repr(use_netrc)}')
+        if isinstance(use_netrc, bool) and use_netrc:
+            self._netrc = netrc()
+        else:
+            # This should be a string specifying a path to a netrc file
+            self._netrc = netrc(os.path.expanduser(use_netrc))
+        auth = self._netrc.authenticators(self._hostname)
+        if not auth:
+            raise errors.CredentialError(f'No machine entry found for {self._hostname} in '
+                'your netrc file')
+
+        # If we get here, we have credentials
+        self._username = auth[0]
+        self._raw_pass = auth[2]
+
+
+    def _get_salt(self, length=16):
+        salt = md5(os.urandom(100)).hexdigest()
+        return salt[:length]
+
+
+    def _do_request(self, method: str, query: dict | None = None,
+                          is_stream: bool = False) -> Response: # noqa: W0613
         qdict = self._get_base_qdict()
         if query is not None:
             qdict.update(query)
@@ -2136,9 +2406,17 @@ class Connection(ConnBase[Response]):
             method += '.view'
         url = f"{self._base_url}:{self._port}/{self._server_path}/{method}"
 
+        # This dictionary is empty in Async (valid for aiohttp)
+        # unasync will replace the line below and the **req_kwargs in the get and post methods
+        # Yeah, it's stupid, but so is function coloring...
+        
+
+        if not self._sess:
+            self._sess = requests.Session()
+
         if self._use_get:
-            return get(url, params=qdict, stream=is_stream, timeout=(30, 60))
-        return post(url, data=qdict, stream=is_stream, timeout=(30, 60))
+            return self._sess.get(url, params=qdict, timeout=self._timeout, stream=is_stream)
+        return self._sess.post(url, data=qdict, timeout=self._timeout, stream=is_stream)
 
 
     def _do_request_with_list(self, method:str, list_name:str, alist:list,
@@ -2156,9 +2434,12 @@ class Connection(ConnBase[Response]):
             method += '.view'
         url = f"{self._base_url}:{self._port}/{self._server_path}/{method}"
 
+        if not self._sess:
+            self._sess = requests.Session()
+
         if self._use_get:
-            return get(url, params=qdict, timeout=(30, 60))
-        return post(url, data=qdict, timeout=(30, 60))
+            return self._sess.get(url, params=qdict, timeout=self._timeout)
+        return self._sess.post(url, data=qdict, timeout=self._timeout)
 
 
     def _do_request_with_lists(self, method:str, list_map:dict, query:dict|None=None) -> Response:
@@ -2181,27 +2462,29 @@ class Connection(ConnBase[Response]):
 
         url = f"{self._base_url}:{self._port}/{self._server_path}/{method}"
 
-        if self._use_get:
-            return get(url, params=qdict, timeout=(60,300))
-        return post(url, data=qdict, timeout=(60,300))
+        if not self._sess:
+            self._sess = requests.Session()
 
+        if self._use_get:
+            return self._sess.get(url, params=qdict, timeout=self._timeout)
+        return self._sess.post(url, data=qdict, timeout=self._timeout)
 
 
     def _handle_info_res(self, res: Response) -> dict:
         # Returns a parsed dictionary version of the result
         res.raise_for_status()
-        dres = res.json()["subsonic-response"]
+        data = res.json()
+        dres = data["subsonic-response"]
         self._check_status(dres)
         return dres
 
 
     def _handle_bin_res(self, res: Response) -> Response:
         res.raise_for_status()
-        ct = res.headers['Content-Type'] if 'Content-Type' in res.headers else None
-
-        if ct:
-            if ct.startswith('text/html') or ct.startswith('application/json'):
-                dres = res.json()["subsonic-response"]
-                self._check_status(dres)
-                raise
+        ct = res.headers.get("Content-Type","")
+        if ct.startswith("application/json") or ct.startswith("text/html"):
+            data = res.json()
+            dres = data["subsonic-response"]
+            self._check_status(dres)
+            raise errors.SonicError("Got text respone when expecting binary")
         return res

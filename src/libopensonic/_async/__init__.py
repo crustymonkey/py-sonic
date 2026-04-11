@@ -13,27 +13,5 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with py-opensonic.  If not, see <http://www.gnu.org/licenses/>
-
-For information on method calls, see 'pydoc libopensonic.connection'
-
-----------
-Basic example:
-----------
-
-import libopensonic
-
-conn = libopensonic.Connection('http://localhost' , 'admin' , 'password')
-print(conn.ping())
-
 """
-
-__version__ = "unknown"
-try:
-    from libopensonic._version import __version__
-except ImportError:
-    # We're running in a tree that doesn't have a _version.py, so we don't know what our version is.
-    pass
-
-from ._async.connection import AsyncConnection
-from ._sync.connection import Connection
-from . import errors
+from .connection import AsyncConnection

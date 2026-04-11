@@ -22,16 +22,17 @@ from pathlib import Path
 from setuptools import setup,find_packages
 
 
+
 # read the contents of your README file
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 requirements = (this_directory / 'requirements.txt').read_text()
 
 # Get package __version__ in our namespace
-ver_path = (this_directory / 'src' / 'libopensonic' / '_version.py')
+ver_path = this_directory / 'src' / 'libopensonic' / '_version.py'
 verstr = 'unknown'
 try:
-    verstrline = open(ver_path, "rt").read()
+    verstrline = open(ver_path, "rt", encoding='utf-8').read()
 except EnvironmentError:
     pass # Okay, there is no version file.
 else:
