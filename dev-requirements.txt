@@ -1,1 +1,5 @@
 unasync
+pytest
+pytest-asyncio
+pytest-mock
+aioresponses
