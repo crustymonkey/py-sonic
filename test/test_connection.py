@@ -402,6 +402,17 @@ class TestInternetRadioMethods:
         assert result is True
 
     @pytest.mark.asyncio
+    async def test_get_internet_radio_stations_none(self, conn, mock_session, mock_response):
+        """Test get_internet_radio_stations with no stations."""
+        set_json_response(mock_response, make_response({
+            "internetRadioStations": {}
+        }))
+        mock_session.post = AsyncMock(return_value=mock_response)
+
+        result = await conn.get_internet_radio_stations()
+        assert result == []
+
+    @pytest.mark.asyncio
     async def test_get_internet_radio_stations_empty(self, conn, mock_session, mock_response):
         """Test get_internet_radio_stations with no stations."""
         set_json_response(mock_response, make_response({
@@ -539,7 +550,7 @@ class TestPlaylistMethods:
         result = await conn.get_playlist("pl-1")
         assert isinstance(result, Playlist)
         assert result.id == "pl-1"
-        assert len(result.entry) == 2
+        assert result.entry and len(result.entry) == 2
 
     @pytest.mark.asyncio
     async def test_update_playlist(self, conn, mock_session, mock_response):
@@ -1024,6 +1035,20 @@ class TestAlbumSongLists:
         assert isinstance(result[0], Album)
 
     @pytest.mark.asyncio
+    async def test_get_album_list2_empty(self, conn, mock_session, mock_response):
+        """Test get_album_list2."""
+        albums = {
+            "albumList2": {
+                "album": None
+            }
+        }
+        set_json_response(mock_response, make_response(albums))
+        mock_session.post = AsyncMock(return_value=mock_response)
+
+        result = await conn.get_album_list2("frequent")
+        assert len(result) == 0
+
+    @pytest.mark.asyncio
     async def test_get_album_list2(self, conn, mock_session, mock_response):
         """Test get_album_list2."""
         albums = {
@@ -1068,6 +1093,19 @@ class TestAlbumSongLists:
         assert isinstance(result[0], Child)
 
     @pytest.mark.asyncio
+    async def test_get_songs_by_genre_empty(self, conn, mock_session, mock_response):
+        """Test get_songs_by_genre."""
+        songs = {
+            "songsByGenre": {
+            }
+        }
+        set_json_response(mock_response, make_response(songs))
+        mock_session.post = AsyncMock(return_value=mock_response)
+
+        result = await conn.get_songs_by_genre("Rock", count=20)
+        assert len(result) == 0
+
+    @pytest.mark.asyncio
     async def test_get_songs_by_genre(self, conn, mock_session, mock_response):
         """Test get_songs_by_genre."""
         songs = {
@@ -1082,6 +1120,19 @@ class TestAlbumSongLists:
         assert len(result) == 1
 
     @pytest.mark.asyncio
+    async def test_get_similar_songs_empty(self, conn, mock_session, mock_response):
+        """Test get_similar_songs."""
+        songs = {
+            "similarSongs": {
+            }
+        }
+        set_json_response(mock_response, make_response(songs))
+        mock_session.post = AsyncMock(return_value=mock_response)
+
+        result = await conn.get_similar_songs("song-1", count=10)
+        assert len(result) == 0
+
+    @pytest.mark.asyncio
     async def test_get_similar_songs(self, conn, mock_session, mock_response):
         """Test get_similar_songs."""
         songs = {
@@ -1094,6 +1145,19 @@ class TestAlbumSongLists:
 
         result = await conn.get_similar_songs("song-1", count=10)
         assert len(result) == 1
+
+    @pytest.mark.asyncio
+    async def test_get_similar_songs2_empty(self, conn, mock_session, mock_response):
+        """Test get_similar_songs2."""
+        songs = {
+            "similarSongs2": {
+            }
+        }
+        set_json_response(mock_response, make_response(songs))
+        mock_session.post = AsyncMock(return_value=mock_response)
+
+        result = await conn.get_similar_songs2("song-1", count=10)
+        assert len(result) == 0
 
     @pytest.mark.asyncio
     async def test_get_similar_songs2(self, conn, mock_session, mock_response):
@@ -1141,6 +1205,22 @@ class TestStarredSearch:
     """Tests for starred and search methods."""
 
     @pytest.mark.asyncio
+    async def test_get_starred_data(self, conn, mock_session, mock_response):
+        """Test get_starred."""
+        starred = {
+            "starred": {
+                "artist": [{"id": "art-1", "name": "Artist"}],
+                "album": [{"id": "alb-1", "isDir": False, "title": "Album"}],
+                "song": [{"id": "s1", "isDir": False, "title": "Song"}]
+            }
+        }
+        set_json_response(mock_response, make_response(starred))
+        mock_session.post = AsyncMock(return_value=mock_response)
+
+        result = await conn.get_starred('id')
+        assert isinstance(result, Starred)
+
+    @pytest.mark.asyncio
     async def test_get_starred(self, conn, mock_session, mock_response):
         """Test get_starred."""
         starred = {
@@ -1155,6 +1235,23 @@ class TestStarredSearch:
 
         result = await conn.get_starred()
         assert isinstance(result, Starred)
+
+    @pytest.mark.asyncio
+    async def test_get_starred2_data(self, conn, mock_session, mock_response):
+        """Test get_starred2."""
+        starred = {
+            "starred2": {
+                "artist": [{"id": "art2-1", "name": "Artist2"}],
+                "album": [{"id": "alb2-1", "name": "Album2", "songCount": 5,
+                          "duration": 1800, "created": "2024-01-01T00:00:00"}],
+                "song": [{"id": "s2-1", "isDir": False, "title": "Song2"}]
+            }
+        }
+        set_json_response(mock_response, make_response(starred))
+        mock_session.post = AsyncMock(return_value=mock_response)
+
+        result = await conn.get_starred2('id')
+        assert isinstance(result, Starred2)
 
     @pytest.mark.asyncio
     async def test_get_starred2(self, conn, mock_session, mock_response):
@@ -1203,6 +1300,15 @@ class TestStarredSearch:
 
         result = await conn.set_rating("song-1", 5)
         assert result is True
+
+    @pytest.mark.asyncio
+    async def test_set_rating_range(self, conn, mock_session, mock_response):
+        """Test set_rating."""
+        set_json_response(mock_response, make_response({}))
+        mock_session.post = AsyncMock(return_value=mock_response)
+
+        with pytest.raises(errors.ArgumentError):
+            await conn.set_rating("song-1", 9)
 
     @pytest.mark.asyncio
     async def test_search2(self, conn, mock_session, mock_response):
