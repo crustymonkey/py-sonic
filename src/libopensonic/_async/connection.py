@@ -981,7 +981,7 @@ class AsyncConnection:
         self._check_status(dres)
         if 'chatMessage' not in dres['chatMessages'] or not dres['chatMessages']['chatMessage']:
             return []
-        return [ChatMessage.from_dict(dres['chatMessages']['chatMessage'])]
+        return [ChatMessage.from_dict(m) for m in dres['chatMessages']['chatMessage']]
 
 
     async def get_cover_art(self, aid:str, size:int|None=None) -> ClientResponse:
@@ -1067,7 +1067,7 @@ class AsyncConnection:
         res = await self._do_request(method)
         dres = await self._handle_info_res(res)
         self._check_status(dres)
-        if 'internetRadioStation' not in dres['internetRadioStations']['internetRadioStation']:
+        if 'internetRadioStation' not in dres['internetRadioStations']:
             return []
         if not dres['internetRadioStations']['internetRadioStation']:
             return []
@@ -1299,7 +1299,7 @@ class AsyncConnection:
         dres = await self._handle_info_res(res)
         self._check_status(dres)
         if 'playlist' not in dres['playlists'] or not dres['playlists']['playlist']:
-            return [] 
+            return []
         return [Playlist.from_dict(entry) for entry in dres['playlists']['playlist']]
 
 
@@ -1889,7 +1889,7 @@ class AsyncConnection:
         DEPRECATED SINCE API 1.4.0!  USE search3() INSTEAD!
         """
         raise NotImplementedError("search is deprecated in favor of search2 or search3")
-    
+
 
     async def search2(self, query:str, artist_count:int=20, artist_offset:int=0,
                 album_count:int=20, album_offset:int=0, song_count:int=20,
@@ -2327,7 +2327,7 @@ class AsyncConnection:
                 })
 
         return qdict
-    
+
 
     def _check_status(self, result:dict) -> bool:
         if result['status'] == 'failed':
