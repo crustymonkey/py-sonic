@@ -40,7 +40,7 @@ class AsyncConnection:
     This is the only class used to make calls of an OpenSubsonic server. All return types are
     defined in media.media_types.py.
     """
-    def __init__(self, base_url:str, username:str, password:str, port:int=4040,
+    def __init__(self, base_url:str, username:str|None=None, password:str|None=None, port:int=4040,
                  api_key:str|None=None, server_path:str='', app_name:str='py-opensonic', api_version:str=API_VERSION,
                  use_netrc:str|None=None, legacy_auth:bool=False,
                  use_get:bool=False, use_views:bool=True):
@@ -2314,7 +2314,7 @@ class AsyncConnection:
 
         if self._api_key:
             qdict['apiKey']  = self._api_key
-        else:
+        elif self._username and self._raw_pass:
             qdict['u'] = self._username
             if self._legacy_auth:
                 qdict['p'] = f'enc:{self._hex_enc(self._raw_pass)}'
@@ -2325,6 +2325,9 @@ class AsyncConnection:
                     's': salt,
                     't': token,
                 })
+        else:
+            raise errors.CredentialError(
+                "Must specify either 'api_key' or ('username' and 'password') but not both.")
 
         return qdict
 
