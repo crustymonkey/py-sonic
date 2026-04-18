@@ -55,3 +55,26 @@ for a later release includes the following:
 * Proper object representations for Artist, Album, Song, etc.
 * Lazy access of members (the song objects aren't created until you want to
   do something with them)
+
+## A Note About Proxies
+I quick note that the library here does **not** assume any particular port
+and/or combination with http scheme (e.g., it is not assumed that https ==
+port 443).  Given that, the port number is **always** part of the full url.
+Why is this important?
+
+The behavior of `urllib` is to use everything up to the 1st "/" as the value
+for the `Host` header.  Therefore, if you use port 443 with https, say
+through a reverse proxy, the host header will end up being
+`Host: <domain/ip>:443`.  It's important to note that this is a
+different behavior when compared to something like `curl`, which will
+strip the port.
+
+Now, the big issue that can occur is when you have a reverse proxy in front of
+your Subsonic service, say for SSL termination.  Some/most proxies will use
+whatever is in your `Host` header verbatim, which can break "virtual host"
+backend lookups.  Personally, I ran into this with `haproxy`.
+
+On the plus side, there are 2 easy fixes:
+
+1. In your call to `libsonic.connection()`, you can set the `Host` header explicitly by passing in `customHeaders={'Host': 'example.con'}` as an option. Obviously, use your domain name there.
+2. Add a virtual host to your proxy config that has `<domain>:port` as a backend alias.  This is the approach I took with `haproxy`, but #1 is also pretty simple.
