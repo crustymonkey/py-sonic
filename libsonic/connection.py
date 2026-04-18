@@ -1202,7 +1202,7 @@ class Connection(object):
         return res
 
     def getAlbumList2(self, ltype, size=10, offset=0, fromYear=None,
-            toYear=None, genre=None):
+            toYear=None, genre=None, musicFolderId=None):
         """
         since 1.8.0
 
@@ -1224,6 +1224,8 @@ class Connection(object):
                         specify toYear
         genre:str       The name of the genre e.g. "Rock".  You must specify
                         genre if you set the ltype to "byGenre"
+        musicFolderId:int   Only return albums in the music folder with the
+                            given ID.  See getMusicFolders()
 
         Returns a dict like the following:
            {u'albumList2': {u'album': [{u'artist': u'Massive Attack',
@@ -1251,7 +1253,7 @@ class Connection(object):
 
         q = self._getQueryDict({'type': ltype, 'size': size,
             'offset': offset, 'fromYear': fromYear, 'toYear': toYear,
-            'genre': genre})
+            'genre': genre, 'musicFolderId': musicFolderId})
 
         req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
@@ -1599,9 +1601,12 @@ class Connection(object):
         self._checkStatus(res)
         return res
 
-    def getArtists(self):
+    def getArtists(self, musicFolderId=None):
         """
         since 1.8.0
+
+        musicFolderId:int   The folder id to return artists from.  See
+                            getMusicFolders()
 
         Similar to getIndexes(), but this method uses the ID3 tags to
         determine the artist
@@ -1624,7 +1629,9 @@ class Connection(object):
         methodName = 'getArtists'
         viewName = '%s.view' % methodName
 
-        req = self._getRequest(viewName)
+        q = self._getQueryDict({'musicFolderId': musicFolderId})
+
+        req = self._getRequest(viewName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
         return res
