@@ -1,3 +1,7 @@
+## 1.2.0
+
+* Fix the broken `insecure` option for https
+
 ## 0.7.0
 
 * py-sonic should now python 2/3 compatible.  Unfortunately, this adds the requirement of the "six" module for this compatibility.  Please file a bug if you run into issues with either python 2 or 3.
