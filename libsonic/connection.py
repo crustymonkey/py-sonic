@@ -172,6 +172,7 @@ class Connection(object):
 
     def setInsecure(self, insecure):
         self._insecure = insecure
+        self._opener = self._getOpener(self._username, self._rawPass)
     insecure = property(lambda s: s._insecure, setInsecure)
 
     def setLegacyAuth(self, lauth):
@@ -2647,7 +2648,12 @@ class Connection(object):
     # Private internal methods
     #
     def _getOpener(self, username, passwd):
-        return urllib.request.build_opener()
+        handlers = []
+        if self._insecure:
+            # Accept expired and self-signed certificates.
+            handlers.append(urllib.request.HTTPSHandler(
+                context=ssl._create_unverified_context()))
+        return urllib.request.build_opener(*handlers)
 
     def _getQueryDict(self, d):
         """
